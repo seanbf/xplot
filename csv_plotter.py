@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from io import StringIO
@@ -79,18 +80,17 @@ def generate(df):
     plot_df.reset_index(inplace=True)
     plot_sum = []
     signal_functions = []
+    hex_rep = []
     subplot = 1
-    st.write(plot_df["Subplot"])
     if checkbox_plot == True:
 
-        if  plot_df["Subplot"].any() != "Main Plot":
-            plot = make_subplots(rows=len(plot_df["Subplot"])+1, cols=1,
-                    shared_xaxes=True,
-                    vertical_spacing=0.02)
-            st.write("subplot!")
-        else:
-            plot = go.Figure()
-            st.write("not sub!")
+        
+        plot = make_subplots(rows=len(plot_df["Subplot"].unique()), cols=1,
+                            shared_xaxes=True,
+                            vertical_spacing=0.1)
+        
+            
+            
         for row in range(0,len(plot_df)):
             
             if plot_df["Subplot"][row] == "Subplot 1":
@@ -99,9 +99,6 @@ def generate(df):
                 subplot = 3
             else:
                 subplot = 1
-
-            st.write(plot_df["Subplot"][row])
-            st.write(subplot)
 
             if plot_df["Function"][row] != []:
                 signal_function_name = str(plot_df["Signal"][row])
@@ -113,11 +110,16 @@ def generate(df):
                     dataframe[signal_function_name] =  dataframe[plot_df["Signal"][row]].apply(y_function_dict[i])
                     plot_df["Signal"][row] = signal_function_name
                     
+            if plot_df["Hex"][row] != []:
+                signal_hex_name = str(plot_df["Signal"][row]) + '(Hex)'
+                dataframe[signal_hex_name] = dataframe[plot_df["Signal"][row]].apply(hex)
+                                    
             if plot_df["Name"][row] == str():
                 Name = plot_df["Signal"][row]
             else:
                 Name = plot_df["Name"][row]
             
+
             if plot_df["Type"][row] == 'lines':
                     plot.add_trace	(go.Scatter (  
                                         x       		= dataframe[symbol_0],
@@ -153,12 +155,13 @@ def generate(df):
                                     ),  row=subplot, col=1          
                                                     )
             
-            
             max_signal = max(dataframe[plot_df["Signal"][row]])
             min_signal = min(dataframe[plot_df["Signal"][row]])
             mean_signal = np.mean(dataframe[plot_df["Signal"][row]])
-
-            plot_sum.append([Name,plot_df["Signal"][row],max_signal,min_signal,mean_signal])
+            plotted_signal = plot_df["Signal"][row]
+            signal_hex_name
+            
+            plot_sum.append([Name,plotted_signal,max_signal,min_signal,mean_signal])
 
             plot.update_layout	(
                             yaxis2	    = dict( 
@@ -169,10 +172,10 @@ def generate(df):
                             height      = 720
                             )
                             
-            st.plotly_chart(plot, use_container_width=True, config=config)
-            plot_summary = pd.DataFrame(plot_sum)
-            plot_summary.rename(columns = {0:'Name',1:'Signal',2:"Maximum",3:"Minimum",4:"Mean"}, inplace = True)
-            st.table(plot_summary)
+        st.plotly_chart(plot, use_container_width=True, config=config)
+        plot_summary = pd.DataFrame(plot_sum)
+        plot_summary.rename(columns = {0:'Name',1:'Signal',2:"Maximum",3:"Minimum",4:"Mean"}, inplace = True)
+        st.table(plot_summary)
 
     if checkbox_table == True:
         st.subheader("Plotted Data")
@@ -184,11 +187,11 @@ def generate(df):
         st.write(dataframe)
 
 def plotsignals():
-    trace_1 = dict([('Signal', symbol_1), ('Name', name_1), ('Axis', axis_1), ('Color', color_1), ('Type', type_1),("Subplot",subplot_1), ("Style", style_1),("Size", size_1), ('Function', function_1) ])
-    trace_2 = dict([('Signal', symbol_2), ('Name', name_2), ('Axis', axis_2), ('Color', color_2), ('Type', type_2),("Subplot",subplot_2), ("Style", style_2),("Size", size_2), ('Function', function_2) ])
-    trace_3 = dict([('Signal', symbol_3), ('Name', name_3), ('Axis', axis_3), ('Color', color_3), ('Type', type_3),("Subplot",subplot_3), ("Style", style_3),("Size", size_3), ('Function', function_3) ])
-    trace_4 = dict([('Signal', symbol_4), ('Name', name_4), ('Axis', axis_4), ('Color', color_4), ('Type', type_4),("Subplot",subplot_4), ("Style", style_4),("Size", size_4), ('Function', function_4) ])
-    trace_5 = dict([('Signal', symbol_5), ('Name', name_5), ('Axis', axis_5), ('Color', color_5), ('Type', type_5),("Subplot",subplot_5), ("Style", style_5),("Size", size_5), ('Function', function_5) ])
+    trace_1 = dict([('Signal', symbol_1), ('Name', name_1), ('Axis', axis_1), ('Color', color_1), ('Type', type_1),("Subplot",subplot_1), ("Style", style_1),("Size", size_1), ('Hex', hex_1),('Bin', bin_1), ('Function', function_1)  ])
+    trace_2 = dict([('Signal', symbol_2), ('Name', name_2), ('Axis', axis_2), ('Color', color_2), ('Type', type_2),("Subplot",subplot_2), ("Style", style_2),("Size", size_2), ('Hex', hex_2),('Bin', bin_2), ('Function', function_2)  ])
+    trace_3 = dict([('Signal', symbol_3), ('Name', name_3), ('Axis', axis_3), ('Color', color_3), ('Type', type_3),("Subplot",subplot_3), ("Style", style_3),("Size", size_3), ('Hex', hex_3),('Bin', bin_3), ('Function', function_3)  ])
+    trace_4 = dict([('Signal', symbol_4), ('Name', name_4), ('Axis', axis_4), ('Color', color_4), ('Type', type_4),("Subplot",subplot_4), ("Style", style_4),("Size", size_4), ('Hex', hex_4),('Bin', bin_4), ('Function', function_4)  ])
+    trace_5 = dict([('Signal', symbol_5), ('Name', name_5), ('Axis', axis_5), ('Color', color_5), ('Type', type_5),("Subplot",subplot_5), ("Style", style_5),("Size", size_5), ('Hex', hex_5),('Bin', bin_5), ('Function', function_5)  ])
     return(trace_1,trace_2, trace_3,trace_4,trace_5)
 
 y_function_dict = {
@@ -221,6 +224,7 @@ with st.sidebar.beta_expander("📝 To Do"):
     st.write("- Add support for differnt formats (.blf, m4f)")
     st.write("- Add hovertip options (Hex, bin)")
     st.write("- Add subplot")
+    st.write("- Add color palattes ✔️")
     
 file_uploader = st.sidebar.file_uploader("")
 
@@ -238,7 +242,27 @@ if file_uploader is not None:
     dataframe.insert(0, 'Index', Index)
     symbols = list(dataframe)
     symbols.insert(0, "Not Selected")
-
+    
+    color_set = st.sidebar.selectbox("Color Palette", ['Plotly','Light24','D3'], key='color_set',help = "Recommended: Light Theme use Plotly, Dark Theme use Light24" )
+    if color_set == 'Plotly':
+        color_set_1 = px.colors.qualitative.Plotly[0]
+        color_set_2 = px.colors.qualitative.Plotly[1]
+        color_set_3 = px.colors.qualitative.Plotly[2]
+        color_set_4 = px.colors.qualitative.Plotly[3]
+        color_set_5 = px.colors.qualitative.Plotly[4]
+    if color_set == 'Light24':
+        color_set_1 = px.colors.qualitative.Light24[0]
+        color_set_2 = px.colors.qualitative.Light24[1]
+        color_set_3 = px.colors.qualitative.Light24[2]
+        color_set_4 = px.colors.qualitative.Light24[3]
+        color_set_5 = px.colors.qualitative.Light24[4]
+    if color_set == 'D3':
+        color_set_1 = px.colors.qualitative.D3[0]
+        color_set_2 = px.colors.qualitative.D3[1]
+        color_set_3 = px.colors.qualitative.D3[2]
+        color_set_4 = px.colors.qualitative.D3[3]
+        color_set_5 = px.colors.qualitative.D3[4]
+    
     with st.sidebar.beta_expander("X Axis", expanded=True):
         name_0      = st.text_input("Rename Signal", "", key="name_0")
         symbol_0    = st.selectbox("Symbol", symbols, key="symbol_0")
@@ -250,20 +274,27 @@ if file_uploader is not None:
         col_name, col_format = st.beta_columns((2,1))
         name_1      = col_name.text_input("Rename Signal", "", key="name_1")
         col_format.text("Format")
-        hex_1       = col_format.checkbox("Hex")
-        bin_1       = col_format.checkbox("Binary")
+        if col_format.checkbox("Hex",help = "Show Hex of Signal") == True:
+            hex_1 = "Hex"
+        else:
+            hex_1 = False
+        
+        if col_format.checkbox("Binary",help = "Show Binrary of Signal") == True:
+            bin_1 = True
+        else:
+            bin_1 = False
         
         col_axis, col_type, col_subplot = st.beta_columns(3)
         axis_1      = col_axis.radio('Axis', ['y1','y2'], key="axis_1")
         type_1      = col_type.radio('Type', ['lines','markers','lines+markers'], key="type_1" )
         col_subplot.text("Subplot")
-        if col_subplot.checkbox("As Subplot") == True:
-            subplot_1       = col_subplot.selectbox("As Subplot",["Not Available Yet","Subplot 1","Subplot 2"])
+        if col_subplot.checkbox("As Subplot", help = "With common X-Axis") == True:
+            subplot_1       = col_subplot.selectbox("Subplot",["Subplot 1","Subplot 2"], key="subplot_1")
         else:
             subplot_1       = "Main Plot"
 
         col_style, col_size, col_color = st.beta_columns(3)
-        color_1     = col_color.color_picker('Pick a color ','#636EFA',help="(Default: #636EFA)", key="color_1")
+        color_1     = col_color.color_picker('Pick a color ',color_set_1,help="(Default:"+color_set_1+")", key="color_1")
         size_1      = col_size.number_input("Size", min_value=0.0, max_value=10.0, value=2.0, step=0.5, key="size_1")
 
         if type_1   == 'lines':
@@ -294,12 +325,12 @@ if file_uploader is not None:
         type_2      = col_type.radio('Type', ['lines','markers','lines+markers'], key="type_2" )
         col_subplot.text("Subplot")
         if col_subplot.checkbox("As Subplot",key="subplot_2") == True:
-            subplot_2       = col_subplot.selectbox("As Subplot",["Not Available Yet","Subplot 1","Subplot 2"])
+            subplot_2       = col_subplot.selectbox("Subplot",["Subplot 1","Subplot 2"], key="subplot_2")
         else:
             subplot_2       = "Main Plot"
 
         col_style, col_size, col_color = st.beta_columns(3)
-        color_2     = col_color.color_picker('Pick a color ','#636EFA',help="(Default: #636EFA)", key="color_2")
+        color_2     = col_color.color_picker('Pick a color ',color_set_2,help="(Default:"+color_set_2+")", key="color_2")
         size_2      = col_size.number_input("Size", min_value=0.0, max_value=10.0, value=2.0, step=0.5, key="size_2")
 
         if type_2   == 'lines':
@@ -330,12 +361,12 @@ if file_uploader is not None:
         type_3      = col_type.radio('Type', ['lines','markers','lines+markers'], key="type_3" )
         col_subplot.text("Subplot")
         if col_subplot.checkbox("As Subplot",key="subplot_3") == True:
-            subplot_3       = col_subplot.selectbox("As Subplot",["Not Available Yet","Subplot 1","Subplot 2"])
+            subplot_3       = col_subplot.selectbox("Subplot",["Subplot 1","Subplot 2"], key="subplot_3")
         else:
             subplot_3       = "Main Plot"
 
         col_style, col_size, col_color = st.beta_columns(3)
-        color_3     = col_color.color_picker('Pick a color ','#636EFA',help="(Default: #636EFA)", key="color_3")
+        color_3     = col_color.color_picker('Pick a color ',color_set_3,help="(Default:"+color_set_3+")", key="color_3")
         size_3      = col_size.number_input("Size", min_value=0.0, max_value=10.0, value=2.0, step=0.5, key="size_3")
 
         if type_3   == 'lines':
@@ -366,12 +397,12 @@ if file_uploader is not None:
         type_4      = col_type.radio('Type', ['lines','markers','lines+markers'], key="type_4" )
         col_subplot.text("Subplot")
         if col_subplot.checkbox("As Subplot",key="subplot_4") == True:
-            subplot_4       = col_subplot.selectbox("As Subplot",["Not Available Yet","Subplot 1","Subplot 2"])
+            subplot_4       = col_subplot.selectbox("Subplot",["Subplot 1","Subplot 2"], key="subplot_4")
         else:
             subplot_4       = "Main Plot"
 
         col_style, col_size, col_color = st.beta_columns(3)
-        color_4     = col_color.color_picker('Pick a color ','#636EFA',help="(Default: #636EFA)", key="color_4")
+        color_4     = col_color.color_picker('Pick a color ',color_set_4,help="(Default:"+color_set_4+")", key="color_4")
         size_4      = col_size.number_input("Size", min_value=0.0, max_value=10.0, value=2.0, step=0.5, key="size_4")
 
         if type_4   == 'lines':
@@ -402,12 +433,12 @@ if file_uploader is not None:
         type_5      = col_type.radio('Type', ['lines','markers','lines+markers'], key="type_5" )
         col_subplot.text("Subplot")
         if col_subplot.checkbox("As Subplot",key="subplot_5") == True:
-            subplot_5       = col_subplot.selectbox("As Subplot",["Not Available Yet","Subplot 1","Subplot 2"])
+            subplot_5       = col_subplot.selectbox("Subplot",["Subplot 1","Subplot 2"], key="subplot_5")
         else:
             subplot_5       = "Main Plot"
 
         col_style, col_size, col_color = st.beta_columns(3)
-        color_5     = col_color.color_picker('Pick a color ','#636EFA',help="(Default: #636EFA)", key="color_5")
+        color_5     = col_color.color_picker('Pick a color ',color_set_5,help="(Default:"+color_set_5+")", key="color_5")
         size_5      = col_size.number_input("Size", min_value=0.0, max_value=10.0, value=2.0, step=0.5, key="size_5")
 
         if type_5   == 'lines':
