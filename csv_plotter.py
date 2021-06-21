@@ -80,14 +80,15 @@ def generate(df):
     plot_df.reset_index(inplace=True)
     plot_sum = []
     signal_functions = []
-    hex_rep = []
+    plotted_data =  pd.DataFrame()
     subplot = 1
+    
     if checkbox_plot == True:
 
         
         plot = make_subplots(rows=len(plot_df["Subplot"].unique()), cols=1,
                             shared_xaxes=True,
-                            vertical_spacing=0.1)
+                            vertical_spacing=0.05)
         
             
             
@@ -95,10 +96,13 @@ def generate(df):
             
             if plot_df["Subplot"][row] == "Subplot 1":
                 subplot = 2
+                plotheight = 900
             elif plot_df["Subplot"][row] =="Subplot 2":
                 subplot = 3
+                plotheight = 1080
             else:
                 subplot = 1
+                plotheight = 720
 
             if plot_df["Function"][row] != []:
                 signal_function_name = str(plot_df["Signal"][row])
@@ -109,11 +113,23 @@ def generate(df):
                     signal_function_name = signal_function_name  + '(' + i + ')'
                     dataframe[signal_function_name] =  dataframe[plot_df["Signal"][row]].apply(y_function_dict[i])
                     plot_df["Signal"][row] = signal_function_name
-                    
-            if plot_df["Hex"][row] != []:
-                signal_hex_name = str(plot_df["Signal"][row]) + '(Hex)'
-                dataframe[signal_hex_name] = dataframe[plot_df["Signal"][row]].apply(hex)
-                                    
+            
+
+                             
+            
+            if plot_df["Hex"][row] & plot_df["Bin"][row]  == True:
+                hovertip=  "Raw: %{y:,.0f}<br>" + "Hex: %{y:.0x }<br>" + "Bin: %{y:.0b}<br>"
+
+            elif (plot_df["Hex"][row] == True) & (plot_df["Bin"][row]  == False):
+                hovertip = "Raw: %{y:,.0f}<br>" +"Hex: %{y:.0x}<br>"
+                             
+            elif (plot_df["Hex"][row] == False) & (plot_df["Bin"][row]  == True):
+                hovertip= "Raw: %{y:,.0f}<br>" +"Bin: %{y:.0b}<br>"
+                                  
+            else:
+                hovertip = "%{y:,.0f}"
+                     
+
             if plot_df["Name"][row] == str():
                 Name = plot_df["Signal"][row]
             else:
@@ -125,7 +141,7 @@ def generate(df):
                                         x       		= dataframe[symbol_0],
                                         y       		= dataframe[plot_df["Signal"][row]],
                                         name 			= Name,
-                                        hovertemplate 	= '%{y:.2f} ',
+                                        hovertemplate 	= hovertip,
                                         mode            = 'lines',
                                         line            = dict(color=plot_df["Color"][row], dash=plot_df["Style"][row], width = plot_df["Size"][row]),
                                         yaxis           = plot_df["Axis"][row]
@@ -136,7 +152,7 @@ def generate(df):
                                         x       		= dataframe[symbol_0],
                                         y       		= dataframe[plot_df["Signal"][row]],
                                         name 			= Name,
-                                        hovertemplate 	= '%{y:.2f}',
+                                        hovertemplate 	= hovertip,
                                         mode            = 'markers',
                                         marker          = dict(color=plot_df["Color"][row], symbol=plot_df["Style"][row]),
                                         yaxis           = plot_df["Axis"][row]
@@ -147,21 +163,22 @@ def generate(df):
                                         x       		= dataframe[symbol_0],
                                         y       		= dataframe[plot_df["Signal"][row]],
                                         name 			= Name,
-                                        hovertemplate 	= '%{y:.2f} ',
+                                        hovertemplate 	= hovertip,
                                         mode            = 'lines+markers',
                                         marker          = dict(color=plot_df["Color"][row]),
                                         line            = dict(color=plot_df["Color"][row]),
                                         yaxis           = plot_df["Axis"][row]
                                     ),  row=subplot, col=1          
                                                     )
-            
+
             max_signal = max(dataframe[plot_df["Signal"][row]])
             min_signal = min(dataframe[plot_df["Signal"][row]])
             mean_signal = np.mean(dataframe[plot_df["Signal"][row]])
             plotted_signal = plot_df["Signal"][row]
-            signal_hex_name
             
             plot_sum.append([Name,plotted_signal,max_signal,min_signal,mean_signal])
+
+            plotted_data[plot_df["Signal"][row]] = dataframe[plot_df["Signal"][row]]
 
             plot.update_layout	(
                             yaxis2	    = dict( 
@@ -169,7 +186,7 @@ def generate(df):
                                                 ),
                             hovermode	= "x",
                             autosize    = True,
-                            height      = 720
+                            height      = plotheight
                             )
                             
         st.plotly_chart(plot, use_container_width=True, config=config)
@@ -179,7 +196,6 @@ def generate(df):
 
     if checkbox_table == True:
         st.subheader("Plotted Data")
-        plotted_data = dataframe.loc[:,dataframe.columns.isin(plot_df["Signal"])]
         st.write(plotted_data)
 
     if checkbox_raw_table == True:
@@ -214,7 +230,7 @@ st.sidebar.markdown('''<small>v0.1</small>''', unsafe_allow_html=True)
 with st.sidebar.beta_expander("📝 To Do"):
     st.write("- Dynamic generation of number of signals depending on amount of colomns in data file")
     st.write("- Plotted data table generation ✔️")
-    st.write("- Multi Y axis ✔️")
+    st.write("- Fix Multi Y axis ")
     st.write("- Rename signal ✔️")
     st.write("- Add functions")
     st.write("- Allow deletion of annotation/shapes")
@@ -222,8 +238,8 @@ with st.sidebar.beta_expander("📝 To Do"):
     st.write("- Add Line/maker styles ✔️")
     st.write("- Make .exe")
     st.write("- Add support for differnt formats (.blf, m4f)")
-    st.write("- Add hovertip options (Hex, bin)")
-    st.write("- Add subplot")
+    st.write("- Add hovertip options (Hex, bin)✔️")
+    st.write("- Add subplot✔️")
     st.write("- Add color palattes ✔️")
     
 file_uploader = st.sidebar.file_uploader("")
@@ -275,7 +291,7 @@ if file_uploader is not None:
         name_1      = col_name.text_input("Rename Signal", "", key="name_1")
         col_format.text("Format")
         if col_format.checkbox("Hex",help = "Show Hex of Signal") == True:
-            hex_1 = "Hex"
+            hex_1 = True
         else:
             hex_1 = False
         
