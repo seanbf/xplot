@@ -1,14 +1,17 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+from palettable.cartocolors.qualitative import Pastel_10
+from palettable.colorbrewer.qualitative import Paired_12
+from palettable.tableau import Tableau_10
+import plotly.express as px
+
 from io import StringIO
 st.set_page_config(page_title="CSV Plotter", page_icon="📈", layout='wide', initial_sidebar_state='auto')
 
 # PLOTLY TOOLBAR/ BEHAVIOUR
-
 config = dict({
     'scrollZoom': False,
     'displayModeBar': True,
@@ -37,6 +40,15 @@ st.markdown(
     </style>
     """,
     unsafe_allow_html=True,)
+
+# Main Page
+st.title('CSV Plotter')
+col_checks, col_colors = st.beta_columns((2,1))
+checkbox_plot = col_checks.checkbox('Plot',value = True)
+checkbox_table = col_checks.checkbox('Display selected data as table',value = True)
+checkbox_raw_table = col_checks.checkbox('Display all data as table')
+
+color_set = col_colors.selectbox("Color Palette", ['Default','Pastel','Paired','MS Office','Light','Dark'], key='color_set',help = "Recommended: Light Theme use Plotly, Dark Theme use Pastel" )
 
 # Functions
 # SIGNAL FUNCTIONS
@@ -90,8 +102,6 @@ def generate(df):
                             shared_xaxes=True,
                             vertical_spacing=0.05)
         
-            
-            
         for row in range(0,len(plot_df)):
             
             if plot_df["Subplot"][row] == "Subplot 1":
@@ -114,9 +124,6 @@ def generate(df):
                     dataframe[signal_function_name] =  dataframe[plot_df["Signal"][row]].apply(y_function_dict[i])
                     plot_df["Signal"][row] = signal_function_name
             
-
-                             
-            
             if plot_df["Hex"][row] & plot_df["Bin"][row]  == True:
                 hovertip=  "Raw: %{y:,.0f}<br>" + "Hex: %{y:.0x }<br>" + "Bin: %{y:.0b}<br>"
 
@@ -134,8 +141,7 @@ def generate(df):
                 Name = plot_df["Signal"][row]
             else:
                 Name = plot_df["Name"][row]
-            
-
+            st.write(plot_df["Axis"][row])            
             if plot_df["Type"][row] == 'lines':
                     plot.add_trace	(go.Scatter (  
                                         x       		= dataframe[symbol_0],
@@ -186,7 +192,7 @@ def generate(df):
                                                 ),
                             hovermode	= "x",
                             autosize    = True,
-                            height      = plotheight
+                            height      = plotheight,
                             )
                             
         st.plotly_chart(plot, use_container_width=True, config=config)
@@ -223,8 +229,6 @@ y_function_dict = {
                 
 y_functions = pd.DataFrame(y_function_dict.keys())
 
-st.title('CSV Plotter')
-
 st.sidebar.markdown('''<small>v0.1</small>''', unsafe_allow_html=True)
 
 with st.sidebar.beta_expander("📝 To Do"):
@@ -259,26 +263,43 @@ if file_uploader is not None:
     symbols = list(dataframe)
     symbols.insert(0, "Not Selected")
     
-    color_set = st.sidebar.selectbox("Color Palette", ['Plotly','Light24','D3'], key='color_set',help = "Recommended: Light Theme use Plotly, Dark Theme use Light24" )
-    if color_set == 'Plotly':
+    if color_set == 'Default':
         color_set_1 = px.colors.qualitative.Plotly[0]
         color_set_2 = px.colors.qualitative.Plotly[1]
         color_set_3 = px.colors.qualitative.Plotly[2]
         color_set_4 = px.colors.qualitative.Plotly[3]
         color_set_5 = px.colors.qualitative.Plotly[4]
-    if color_set == 'Light24':
+    if color_set == 'Pastel':
+        color_set_1 = Pastel_10.hex_colors[0]
+        color_set_2 = Pastel_10.hex_colors[1]
+        color_set_3 = Pastel_10.hex_colors[2]
+        color_set_4 = Pastel_10.hex_colors[3]
+        color_set_5 = Pastel_10.hex_colors[4]
+    if color_set == 'Paired':
+        color_set_1 = Paired_12.hex_colors[0]
+        color_set_2 = Paired_12.hex_colors[1]
+        color_set_3 = Paired_12.hex_colors[2]
+        color_set_4 = Paired_12.hex_colors[3]
+        color_set_5 = Paired_12.hex_colors[4]
+    if color_set == 'MS Office':
+        color_set_1 = Tableau_10.hex_colors[0]
+        color_set_2 = Tableau_10.hex_colors[1]
+        color_set_3 = Tableau_10.hex_colors[2]
+        color_set_4 = Tableau_10.hex_colors[3]
+        color_set_5 = Tableau_10.hex_colors[4]
+    if color_set == 'Light':
         color_set_1 = px.colors.qualitative.Light24[0]
         color_set_2 = px.colors.qualitative.Light24[1]
         color_set_3 = px.colors.qualitative.Light24[2]
         color_set_4 = px.colors.qualitative.Light24[3]
         color_set_5 = px.colors.qualitative.Light24[4]
-    if color_set == 'D3':
-        color_set_1 = px.colors.qualitative.D3[0]
-        color_set_2 = px.colors.qualitative.D3[1]
-        color_set_3 = px.colors.qualitative.D3[2]
-        color_set_4 = px.colors.qualitative.D3[3]
-        color_set_5 = px.colors.qualitative.D3[4]
-    
+    if color_set == 'Dark':
+        color_set_1 = px.colors.qualitative.Dark24[0]
+        color_set_2 = px.colors.qualitative.Dark24[1]
+        color_set_3 = px.colors.qualitative.Dark24[2]
+        color_set_4 = px.colors.qualitative.Dark24[3]
+        color_set_5 = px.colors.qualitative.Dark24[4]
+
     with st.sidebar.beta_expander("X Axis", expanded=True):
         name_0      = st.text_input("Rename Signal", "", key="name_0")
         symbol_0    = st.selectbox("Symbol", symbols, key="symbol_0")
@@ -471,13 +492,7 @@ if file_uploader is not None:
         if function_5   == 'offset':
             function_5_var = col_function_var.number_input("Offset", min_value=-100000.0, max_value=100000.0, value=1.0, step=0.00001, key="size_5")    
 
-# Item Selection
-checkbox_plot = st.checkbox('Plot',value = True)
-checkbox_table = st.checkbox('Display selected data as table',value = True)
-checkbox_raw_table = st.checkbox('Display all data as table')
-
 # Generate
-
 if st.button("Generate"):
     Y_s = plotsignals()
 
