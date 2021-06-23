@@ -7,23 +7,30 @@ from palettable.cartocolors.qualitative import Pastel_10
 from palettable.colorbrewer.qualitative import Paired_12
 from palettable.tableau import Tableau_10
 import plotly.express as px
+from bokeh.plotting import figure, show
 
 from io import StringIO
-st.set_page_config(page_title="CSV Plotter", page_icon="📈", layout='wide', initial_sidebar_state='auto')
+st.set_page_config  (
+                    page_title              ="CSV Plotter", 
+                    page_icon               ="📈", 
+                    layout                  ='wide', 
+                    initial_sidebar_state   ='auto'
+                    )
 
 # PLOTLY TOOLBAR/ BEHAVIOUR
-config = dict({
-    'scrollZoom': False,
-    'displayModeBar': True,
-    'editable': True,
-    'modeBarButtonsToAdd':  ['drawline',
-                            'drawopenpath',
-                            'drawclosedpath',
-                            'drawcircle',
-                            'drawrect',
-                            'eraseshape'
-                            ],
-    'toImageButtonOptions': {'format': 'svg',}
+config = dict   ({
+    'scrollZoom'            : False,
+    'displayModeBar'        : True,
+    'editable'              : True,
+    'modeBarButtonsToAdd'   :   [
+                                'drawline',
+                                'drawopenpath',
+                                'drawclosedpath',
+                                'drawcircle',
+                                'drawrect',
+                                'eraseshape'
+                                ],
+    'toImageButtonOptions'  :   {'format': 'svg',}
                 })
 
 # SIDEBAR BEHAVIOUR
@@ -43,10 +50,11 @@ st.markdown(
 
 # Main Page
 st.title('CSV Plotter')
-col_checks, col_colors = st.beta_columns((2,1))
-checkbox_plot = col_checks.checkbox('Plot',value = True)
-checkbox_table = col_checks.checkbox('Display selected data as table',value = True)
-checkbox_raw_table = col_checks.checkbox('Display all data as table')
+
+col_checks, col_colors  = st.beta_columns((2,1))
+checkbox_plot           = col_checks.checkbox('Plot',value = True)
+checkbox_table          = col_checks.checkbox('Display selected data as table',value = True)
+checkbox_raw_table      = col_checks.checkbox('Display all data as table')
 
 color_set = col_colors.selectbox("Color Palette", ['Default','Pastel','Paired','MS Office','Light','Dark'], key='color_set',help = "Recommended: Light Theme use Plotly, Dark Theme use Pastel" )
 
@@ -84,64 +92,75 @@ def revs2degree(angle_revs):
     angle_degree = angle_revs * 360
     return angle_degree
 
-# 
+
 def generate(df):
 
-    plot_df = pd.DataFrame(Y_s)
-    plot_df = plot_df[plot_df["Signal"]!='Not Selected']
+    plot_sum            = []
+    signal_functions    = []
+    plotted_data        = pd.DataFrame()
+    subplot             = 1
+    plot_df             = pd.DataFrame(Y_s)
+    plot_df             = plot_df[plot_df["Signal"]!='Not Selected']
     plot_df.reset_index(inplace=True)
-    plot_sum = []
-    signal_functions = []
-    plotted_data =  pd.DataFrame()
-    subplot = 1
     
     if checkbox_plot == True:
-
-        
-        plot = make_subplots(rows=len(plot_df["Subplot"].unique()), cols=1,
-                            shared_xaxes=True,
-                            vertical_spacing=0.05)
-        
+        plot = go.Figure()
+        #plot = make_subplots(   
+        #                    rows                = len(plot_df["Subplot"].unique()), 
+        #                    cols                = 1,
+        #                    shared_xaxes        = True,
+        #                    vertical_spacing    = 0.05,
+        #                    specs               = [[{"secondary_y": True}]]
+        #                    )
+        #
+        # For each signal config.
         for row in range(0,len(plot_df)):
             
+            # Determine subplots
             if plot_df["Subplot"][row] == "Subplot 1":
                 subplot = 2
                 plotheight = 900
+
             elif plot_df["Subplot"][row] =="Subplot 2":
                 subplot = 3
                 plotheight = 1080
+
             else:
                 subplot = 1
                 plotheight = 720
 
+            # Apply function(s) to signal
             if plot_df["Function"][row] != []:
                 signal_function_name = str(plot_df["Signal"][row])
+
                 for items in plot_df["Function"][row]:
                     signal_functions.append(items)
                 
                 for i in signal_functions:
-                    signal_function_name = signal_function_name  + '(' + i + ')'
+                    signal_function_name = signal_function_name  + '[' + i + ']'
                     dataframe[signal_function_name] =  dataframe[plot_df["Signal"][row]].apply(y_function_dict[i])
                     plot_df["Signal"][row] = signal_function_name
             
+            # Show hex / binrary 
             if plot_df["Hex"][row] & plot_df["Bin"][row]  == True:
-                hovertip=  "Raw: %{y:,.0f}<br>" + "Hex: %{y:.0x }<br>" + "Bin: %{y:.0b}<br>"
+                hovertip    = "Raw: %{y:,.0f}<br>" + "Hex: %{y:.0x }<br>" + "Bin: %{y:.0b}<br>"
 
             elif (plot_df["Hex"][row] == True) & (plot_df["Bin"][row]  == False):
-                hovertip = "Raw: %{y:,.0f}<br>" +"Hex: %{y:.0x}<br>"
+                hovertip    = "Raw: %{y:,.0f}<br>" + "Hex: %{y:.0x}<br>"
                              
             elif (plot_df["Hex"][row] == False) & (plot_df["Bin"][row]  == True):
-                hovertip= "Raw: %{y:,.0f}<br>" +"Bin: %{y:.0b}<br>"
+                hovertip    = "Raw: %{y:,.0f}<br>" + "Bin: %{y:.0b}<br>"
                                   
             else:
-                hovertip = "%{y:,.0f}"
+                hovertip    = "%{y:,.0f}"
                      
-
+            # Rename Signals
             if plot_df["Name"][row] == str():
                 Name = plot_df["Signal"][row]
             else:
                 Name = plot_df["Name"][row]
-            st.write(plot_df["Axis"][row])            
+
+            # Plot type
             if plot_df["Type"][row] == 'lines':
                     plot.add_trace	(go.Scatter (  
                                         x       		= dataframe[symbol_0],
@@ -149,10 +168,13 @@ def generate(df):
                                         name 			= Name,
                                         hovertemplate 	= hovertip,
                                         mode            = 'lines',
-                                        line            = dict(color=plot_df["Color"][row], dash=plot_df["Style"][row], width = plot_df["Size"][row]),
+                                        line            = dict  (
+                                                                color   = plot_df["Color"][row], 
+                                                                dash    = plot_df["Style"][row], 
+                                                                width   = plot_df["Size"][row]
+                                                                ),
                                         yaxis           = plot_df["Axis"][row]
-                                    ),  row=subplot, col=1          
-                                                )
+                                    ))
             elif plot_df["Type"][row] == 'markers':
                     plot.add_trace	(go.Scatter (  
                                         x       		= dataframe[symbol_0],
@@ -160,9 +182,14 @@ def generate(df):
                                         name 			= Name,
                                         hovertemplate 	= hovertip,
                                         mode            = 'markers',
-                                        marker          = dict(color=plot_df["Color"][row], symbol=plot_df["Style"][row]),
+                                        marker          = dict  (
+                                                                color   = plot_df["Color"][row], 
+                                                                symbol  = plot_df["Style"][row]
+                                                                ),
                                         yaxis           = plot_df["Axis"][row]
-                                    ),  row=subplot, col=1          
+                                    ),  
+                                        row             = subplot, 
+                                        col             = 1          
                                                 )
             else:
                     plot.add_trace	(go.Scatter (  
@@ -171,32 +198,42 @@ def generate(df):
                                         name 			= Name,
                                         hovertemplate 	= hovertip,
                                         mode            = 'lines+markers',
-                                        marker          = dict(color=plot_df["Color"][row]),
+                                        marker          = dict  (
+                                                                color   = plot_df["Color"][row]
+                                                                ),
                                         line            = dict(color=plot_df["Color"][row]),
                                         yaxis           = plot_df["Axis"][row]
-                                    ),  row=subplot, col=1          
+                                    ),  
+                                        row             = subplot, 
+                                        col             = 1          
                                                     )
 
-            max_signal = max(dataframe[plot_df["Signal"][row]])
-            min_signal = min(dataframe[plot_df["Signal"][row]])
-            mean_signal = np.mean(dataframe[plot_df["Signal"][row]])
-            plotted_signal = plot_df["Signal"][row]
+            # Summary table
+            max_signal      = max(dataframe[plot_df["Signal"][row]])
+            min_signal      = min(dataframe[plot_df["Signal"][row]])
+            mean_signal     = np.mean(dataframe[plot_df["Signal"][row]])
+            plotted_signal  = plot_df["Signal"][row]
             
-            plot_sum.append([Name,plotted_signal,max_signal,min_signal,mean_signal])
+            plot_sum.append([Name, plotted_signal, max_signal, min_signal ,mean_signal])
 
+            # Table for plotted table
             plotted_data[plot_df["Signal"][row]] = dataframe[plot_df["Signal"][row]]
 
+            st.write(plot_df["Axis"][row])
             plot.update_layout	(
-                            yaxis2	    = dict( 
-                                                side        = 'right'
-                                                ),
-                            hovermode	= "x",
-                            autosize    = True,
-                            height      = plotheight,
-                            )
-                            
+                                yaxis2=dict(
+                                    anchor="x",
+                                    overlaying="y",
+                                    side="right"
+                                ),
+                                hovermode	= "x",
+                                autosize    = True,
+                                height      = plotheight,
+                                )
+
         st.plotly_chart(plot, use_container_width=True, config=config)
-        plot_summary = pd.DataFrame(plot_sum)
+
+        plot_summary                = pd.DataFrame(plot_sum)
         plot_summary.rename(columns = {0:'Name',1:'Signal',2:"Maximum",3:"Minimum",4:"Mean"}, inplace = True)
         st.table(plot_summary)
 
@@ -216,6 +253,7 @@ def plotsignals():
     trace_5 = dict([('Signal', symbol_5), ('Name', name_5), ('Axis', axis_5), ('Color', color_5), ('Type', type_5),("Subplot",subplot_5), ("Style", style_5),("Size", size_5), ('Hex', hex_5),('Bin', bin_5), ('Function', function_5)  ])
     return(trace_1,trace_2, trace_3,trace_4,trace_5)
 
+# Functions
 y_function_dict = {
                 'gain':gain,
                 'offset':offset,
@@ -250,49 +288,58 @@ file_uploader = st.sidebar.file_uploader("")
 
 if file_uploader is not None:
     # To read file as bytes:
-    bytes_data = file_uploader.getvalue()   
+    bytes_data  = file_uploader.getvalue()   
     # To convert to a string based IO:
-    stringio = StringIO(file_uploader.getvalue().decode("utf-8"))   
+    stringio    = StringIO(file_uploader.getvalue().decode("utf-8"))   
     # To read file as string:
     string_data = stringio.read()   
     # Can be used wherever a "file-like" object is accepted:
-    dataframe = pd.read_csv(file_uploader)
+    dataframe   = pd.read_csv(file_uploader)
 
-    Index = np.arange(0, len(dataframe), 1)
+    # Create Index array, to plot against. Not all data has timestamp
+    Index   = np.arange(0, len(dataframe), 1)
     dataframe.insert(0, 'Index', Index)
     symbols = list(dataframe)
+
+    # Use to NOT plot.
     symbols.insert(0, "Not Selected")
     
+    # Color Palettes
     if color_set == 'Default':
         color_set_1 = px.colors.qualitative.Plotly[0]
         color_set_2 = px.colors.qualitative.Plotly[1]
         color_set_3 = px.colors.qualitative.Plotly[2]
         color_set_4 = px.colors.qualitative.Plotly[3]
         color_set_5 = px.colors.qualitative.Plotly[4]
+
     if color_set == 'Pastel':
         color_set_1 = Pastel_10.hex_colors[0]
         color_set_2 = Pastel_10.hex_colors[1]
         color_set_3 = Pastel_10.hex_colors[2]
         color_set_4 = Pastel_10.hex_colors[3]
         color_set_5 = Pastel_10.hex_colors[4]
+
     if color_set == 'Paired':
         color_set_1 = Paired_12.hex_colors[0]
         color_set_2 = Paired_12.hex_colors[1]
         color_set_3 = Paired_12.hex_colors[2]
         color_set_4 = Paired_12.hex_colors[3]
         color_set_5 = Paired_12.hex_colors[4]
+
     if color_set == 'MS Office':
         color_set_1 = Tableau_10.hex_colors[0]
         color_set_2 = Tableau_10.hex_colors[1]
         color_set_3 = Tableau_10.hex_colors[2]
         color_set_4 = Tableau_10.hex_colors[3]
         color_set_5 = Tableau_10.hex_colors[4]
+
     if color_set == 'Light':
         color_set_1 = px.colors.qualitative.Light24[0]
         color_set_2 = px.colors.qualitative.Light24[1]
         color_set_3 = px.colors.qualitative.Light24[2]
         color_set_4 = px.colors.qualitative.Light24[3]
         color_set_5 = px.colors.qualitative.Light24[4]
+
     if color_set == 'Dark':
         color_set_1 = px.colors.qualitative.Dark24[0]
         color_set_2 = px.colors.qualitative.Dark24[1]
@@ -300,11 +347,14 @@ if file_uploader is not None:
         color_set_4 = px.colors.qualitative.Dark24[3]
         color_set_5 = px.colors.qualitative.Dark24[4]
 
+    # Side bar items
+    # X-Axis
     with st.sidebar.beta_expander("X Axis", expanded=True):
         name_0      = st.text_input("Rename Signal", "", key="name_0")
         symbol_0    = st.selectbox("Symbol", symbols, key="symbol_0")
-        function_0   = st.multiselect('Functions', ['example:time2frequency'], key="function_0" )
+        function_0  = st.multiselect('Functions', ['example:time2frequency'], key="function_0" )
 
+    # Signal 1
     with st.sidebar.beta_expander("Signal 1", expanded=True):
         symbol_1    = st.selectbox("Symbol", symbols, key="symbol_1")
 
@@ -347,7 +397,8 @@ if file_uploader is not None:
             function_1_var = col_function_var.number_input("Gain", min_value=-100000.0, max_value=100000.0, value=1.0, step=0.00001, key="size_1")
         if function_1   == 'offset':
             function_1_var = col_function_var.number_input("Offset", min_value=-100000.0, max_value=100000.0, value=1.0, step=0.00001, key="size_1")       
-        
+
+    # Signal 2    
     with st.sidebar.beta_expander("Signal 2"):
         symbol_2    = st.selectbox("Symbol", symbols, key="symbol_2")
 
