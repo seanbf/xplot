@@ -102,17 +102,31 @@ def generate(df):
     plot_df             = pd.DataFrame(Y_s)
     plot_df             = plot_df[plot_df["Signal"]!='Not Selected']
     plot_df.reset_index(inplace=True)
+
+    if (len(plot_df["Subplot"].unique()) > 1) & (len(plot_df["Axis"].unique()) > 1):
+        y_axis_spec     = [ [{'secondary_y': True}],
+                            [{'secondary_y': True}] ]        
+
+    elif (len(plot_df["Subplot"].unique()) > 1) & (len(plot_df["Axis"].unique()) == 1):
+        y_axis_spec     = [ [{'secondary_y': False}],
+                            [{'secondary_y': False}] ]
     
+    elif (len(plot_df["Subplot"].unique()) == 1) & (len(plot_df["Axis"].unique()) > 1):
+        y_axis_spec      =  [ [{'secondary_y': True}] ]
+        
+    else:
+        y_axis_spec      =  [ [{'secondary_y': False}] ]
+
     if checkbox_plot == True:
-        plot = go.Figure()
-        #plot = make_subplots(   
-        #                    rows                = len(plot_df["Subplot"].unique()), 
-        #                    cols                = 1,
-        #                    shared_xaxes        = True,
-        #                    vertical_spacing    = 0.05,
-        #                    specs               = [[{"secondary_y": True}]]
-        #                    )
-        #
+        
+        plot = make_subplots(   
+                            rows                = len(plot_df["Subplot"].unique()), 
+                            cols                = 1,
+                            shared_xaxes        = True,
+                            specs               = y_axis_spec,
+                            vertical_spacing    = 0.05
+                            )
+        
         # For each signal config.
         for row in range(0,len(plot_df)):
             
@@ -128,6 +142,13 @@ def generate(df):
             else:
                 subplot = 1
                 plotheight = 720
+            
+            # Determine y-axis
+            if plot_df["Axis"][row] == "y1":
+                y_axis_plot = False
+
+            else:
+                y_axis_plot = True
 
             # Apply function(s) to signal
             if plot_df["Function"][row] != []:
@@ -173,8 +194,12 @@ def generate(df):
                                                                 dash    = plot_df["Style"][row], 
                                                                 width   = plot_df["Size"][row]
                                                                 ),
-                                        yaxis           = plot_df["Axis"][row]
-                                    ))
+                                    ),
+                                    row=subplot,
+                                    col=1,
+                                    secondary_y=y_axis_plot
+                                    )
+
             elif plot_df["Type"][row] == 'markers':
                     plot.add_trace	(go.Scatter (  
                                         x       		= dataframe[symbol_0],
@@ -219,17 +244,12 @@ def generate(df):
             # Table for plotted table
             plotted_data[plot_df["Signal"][row]] = dataframe[plot_df["Signal"][row]]
 
-            st.write(plot_df["Axis"][row])
             plot.update_layout	(
-                                yaxis2=dict(
-                                    anchor="x",
-                                    overlaying="y",
-                                    side="right"
-                                ),
                                 hovermode	= "x",
                                 autosize    = True,
                                 height      = plotheight,
                                 )
+            
 
         st.plotly_chart(plot, use_container_width=True, config=config)
 
