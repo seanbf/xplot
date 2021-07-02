@@ -15,22 +15,23 @@ st.set_page_config  (
                     page_icon               ="📈", 
                     layout                  ='wide', 
                     initial_sidebar_state   ='auto'
+                    
                     )
 
 # PLOTLY TOOLBAR/ BEHAVIOUR
 config = dict   ({
-    'scrollZoom'            : False,
+    'scrollZoom'            : True,
     'displayModeBar'        : True,
     'editable'              : True,
-    'modeBarButtonsToAdd'   :   [
-                                'drawline',
-                                'drawopenpath',
-                                'drawclosedpath',
-                                'drawcircle',
-                                'drawrect',
-                                'eraseshape'
-                                ],
-    'toImageButtonOptions'  :   {'format': 'svg',}
+    #'modeBarButtonsToAdd'   :   [
+    #                            'drawline',
+    #                            'drawopenpath',
+    #                            'drawclosedpath',
+    #                            'drawcircle',
+    #                            'drawrect',
+    #                            'eraseshape'
+    #                            ],
+    'toImageButtonOptions'  :   {'format': 'svg'}
                 })
 
 # SIDEBAR BEHAVIOUR
@@ -194,10 +195,10 @@ def generate(df):
                                                                 dash    = plot_df["Style"][row], 
                                                                 width   = plot_df["Size"][row]
                                                                 ),
-                                    ),
-                                    row=subplot,
-                                    col=1,
-                                    secondary_y=y_axis_plot
+                                                ),
+                                    row                 = subplot,
+                                    col                 = 1,
+                                    secondary_y         = y_axis_plot
                                     )
 
             elif plot_df["Type"][row] == 'markers':
@@ -212,10 +213,11 @@ def generate(df):
                                                                 symbol  = plot_df["Style"][row]
                                                                 ),
                                         yaxis           = plot_df["Axis"][row]
-                                    ),  
+                                                ),  
                                         row             = subplot, 
-                                        col             = 1          
-                                                )
+                                        col             = 1,
+                                        secondary_y     = y_axis_plot          
+                                    )
             else:
                     plot.add_trace	(go.Scatter (  
                                         x       		= dataframe[symbol_0],
@@ -228,10 +230,11 @@ def generate(df):
                                                                 ),
                                         line            = dict(color=plot_df["Color"][row]),
                                         yaxis           = plot_df["Axis"][row]
-                                    ),  
+                                                ),  
                                         row             = subplot, 
-                                        col             = 1          
-                                                    )
+                                        col             = 1,
+                                        secondary_y     = y_axis_plot         
+                                    )
 
             # Summary table
             max_signal      = max(dataframe[plot_df["Signal"][row]])
@@ -290,16 +293,16 @@ y_functions = pd.DataFrame(y_function_dict.keys())
 st.sidebar.markdown('''<small>v0.1</small>''', unsafe_allow_html=True)
 
 with st.sidebar.beta_expander("📝 To Do"):
-    st.write("- Dynamic generation of number of signals depending on amount of colomns in data file")
-    st.write("- Plotted data table generation ✔️")
-    st.write("- Fix Multi Y axis ")
-    st.write("- Rename signal ✔️")
+    st.write("- Make .exe")
+    st.write("- Add support for differnt formats (.blf, m4f)")
+    st.write("- Dynamic generation of number of signals and their properties (i.e more than 5)")
     st.write("- Add functions")
     st.write("- Allow deletion of annotation/shapes")
     st.write("- Export as HTML")
+    st.write("- Plotted data table generation ✔️")
+    st.write("- Fix Multi Y axis ✔️")
+    st.write("- Rename signal ✔️")
     st.write("- Add Line/maker styles ✔️")
-    st.write("- Make .exe")
-    st.write("- Add support for differnt formats (.blf, m4f)")
     st.write("- Add hovertip options (Hex, bin)✔️")
     st.write("- Add subplot✔️")
     st.write("- Add color palattes ✔️")
@@ -370,7 +373,6 @@ if file_uploader is not None:
     # Side bar items
     # X-Axis
     with st.sidebar.beta_expander("X Axis", expanded=True):
-        name_0      = st.text_input("Rename Signal", "", key="name_0")
         symbol_0    = st.selectbox("Symbol", symbols, key="symbol_0")
         function_0  = st.multiselect('Functions', ['example:time2frequency'], key="function_0" )
 
