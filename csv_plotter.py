@@ -2,14 +2,13 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
+import plotly.express as px
 from plotly.subplots import make_subplots
 from palettable.cartocolors.qualitative import Pastel_10
 from palettable.colorbrewer.qualitative import Paired_12
 from palettable.tableau import Tableau_10
-import plotly.express as px
-from bokeh.plotting import figure, show
-
 from io import StringIO
+
 st.set_page_config  (
                     page_title              ="CSV Plotter", 
                     page_icon               ="📈", 
@@ -22,15 +21,15 @@ st.set_page_config  (
 config = dict   ({
     'scrollZoom'            : True,
     'displayModeBar'        : True,
-    'editable'              : True,
-    #'modeBarButtonsToAdd'   :   [
-    #                            'drawline',
-    #                            'drawopenpath',
-    #                            'drawclosedpath',
-    #                            'drawcircle',
-    #                            'drawrect',
-    #                            'eraseshape'
-    #                            ],
+    'editable'              : False,
+    'modeBarButtonsToAdd'   :   [
+                                'drawline',
+                                'drawopenpath',
+                                'drawclosedpath',
+                                'drawcircle',
+                                'drawrect',
+                                'eraseshape'
+                                ],
     'toImageButtonOptions'  :   {'format': 'svg'}
                 })
 
@@ -58,6 +57,45 @@ checkbox_table          = col_checks.checkbox('Display selected data as table',v
 checkbox_raw_table      = col_checks.checkbox('Display all data as table')
 
 color_set = col_colors.selectbox("Color Palette", ['Default','Pastel','Paired','MS Office','Light','Dark'], key='color_set',help = "Recommended: Light Theme use Plotly, Dark Theme use Pastel" )
+extra_signals = col_colors.number_input("Extra Signals", min_value=0, max_value=10, value=0, step=1, help = "Generate extra signal containers, useful if your comparing signals with functions applied")
+
+color_palaette = []
+
+if color_set == 'Default':
+    for  i in range(0,len(px.colors.qualitative.Plotly)):
+        color_palaette.append(px.colors.qualitative.Plotly[i])
+
+if color_set == 'Pastel':
+    for  i in range(0,len(Pastel_10.hex_colors)):
+        color_palaette.append(Pastel_10.hex_colors[i])
+
+if color_set == 'Paired':
+    for  i in range(0,len(Paired_12.hex_colors)):
+        color_palaette.append(Paired_12.hex_colors[i])
+
+if color_set == 'MS Office':
+    for  i in range(0,len(Tableau_10.hex_colors)):
+        color_palaette.append(Tableau_10.hex_colors[i])
+
+if color_set == 'Light':
+    for  i in range(0,len(px.colors.qualitative.Light24)):
+        color_palaette.append(px.colors.qualitative.Light24[i])
+
+if color_set == 'Dark':
+    for  i in range(0,len(px.colors.qualitative.Dark24)):
+        color_palaette.append(px.colors.qualitative.Dark24[i])
+
+trace =  dict()
+trace["Symbol"] = []
+trace["Name"] = []
+trace["Hex_rep"] = []
+trace["Bin_rep"] = []
+trace["Plot_row"] = []
+trace["Axis"] = []
+trace["Color"] = []
+trace["Size"] = []
+trace["Style"] = []
+trace["Chart_type"] = []
 
 # Functions
 # SIGNAL FUNCTIONS
@@ -93,35 +131,38 @@ def revs2degree(angle_revs):
     angle_degree = angle_revs * 360
     return angle_degree
 
-
-def generate(df):
-
-    plot_sum            = []
-    signal_functions    = []
-    plotted_data        = pd.DataFrame()
-    subplot             = 1
-    plot_df             = pd.DataFrame(Y_s)
-    plot_df             = plot_df[plot_df["Signal"]!='Not Selected']
-    plot_df.reset_index(inplace=True)
-
-    if (len(plot_df["Subplot"].unique()) > 1) & (len(plot_df["Axis"].unique()) > 1):
-        y_axis_spec     = [ [{'secondary_y': True}],
-                            [{'secondary_y': True}] ]        
-
-    elif (len(plot_df["Subplot"].unique()) > 1) & (len(plot_df["Axis"].unique()) == 1):
-        y_axis_spec     = [ [{'secondary_y': False}],
-                            [{'secondary_y': False}] ]
+def generate(df, plot_df):
     
-    elif (len(plot_df["Subplot"].unique()) == 1) & (len(plot_df["Axis"].unique()) > 1):
-        y_axis_spec      =  [ [{'secondary_y': True}] ]
-        
+    y_axis_spec = []
+
+    secondary_y =  plot_df.loc[plot_df['Plot_row'] == 'Main Plot']
+    if secondary_y["Axis"].all() == 'y1':
+            y_axis_spec.append([{'secondary_y': False}])
+    elif secondary_y["Axis"].any() == 'y1':
+            y_axis_spec.append([{'secondary_y': True}])
     else:
-        y_axis_spec      =  [ [{'secondary_y': False}] ]
+            pass
+
+    secondary_y =  plot_df.loc[plot_df['Plot_row'] == 'Subplot 1']
+    if secondary_y["Axis"].all() == 'y1':
+            y_axis_spec.append([{'secondary_y': False}])
+    elif secondary_y["Axis"].any() == 'y1':
+            y_axis_spec.append([{'secondary_y': True}])
+    else:
+            pass
+
+    secondary_y =  plot_df.loc[plot_df['Plot_row'] == 'Subplot 2']
+    if secondary_y["Axis"].all() == 'y1':
+            y_axis_spec.append([{'secondary_y': False}])
+    elif secondary_y["Axis"].any() == 'y1':
+            y_axis_spec.append([{'secondary_y': True}])
+    else:
+            pass
 
     if checkbox_plot == True:
         
         plot = make_subplots(   
-                            rows                = len(plot_df["Subplot"].unique()), 
+                            rows                = len(plot_df["Plot_row"].unique()), 
                             cols                = 1,
                             shared_xaxes        = True,
                             specs               = y_axis_spec,
@@ -132,11 +173,11 @@ def generate(df):
         for row in range(0,len(plot_df)):
             
             # Determine subplots
-            if plot_df["Subplot"][row] == "Subplot 1":
+            if plot_df["Plot_row"][row] == "Subplot 1":
                 subplot = 2
                 plotheight = 900
 
-            elif plot_df["Subplot"][row] =="Subplot 2":
+            elif plot_df["Plot_row"][row] =="Subplot 2":
                 subplot = 3
                 plotheight = 1080
 
@@ -152,25 +193,25 @@ def generate(df):
                 y_axis_plot = True
 
             # Apply function(s) to signal
-            if plot_df["Function"][row] != []:
-                signal_function_name = str(plot_df["Signal"][row])
+            #if plot_df["Function"][row] != []:
+            #    signal_function_name = str(plot_df["Signal"][row])
 
-                for items in plot_df["Function"][row]:
-                    signal_functions.append(items)
-                
-                for i in signal_functions:
-                    signal_function_name = signal_function_name  + '[' + i + ']'
-                    dataframe[signal_function_name] =  dataframe[plot_df["Signal"][row]].apply(y_function_dict[i])
-                    plot_df["Signal"][row] = signal_function_name
+            #    for items in plot_df["Function"][row]:
+            #        signal_functions.append(items)
+            #    
+            #    for i in signal_functions:
+            #        signal_function_name = signal_function_name  + '[' + i + ']'
+            #        dataframe[signal_function_name] =  dataframe[plot_df["Signal"][row]].apply(y_function_dict[i])
+            #        plot_df["Signal"][row] = signal_function_name
             
             # Show hex / binrary 
-            if plot_df["Hex"][row] & plot_df["Bin"][row]  == True:
+            if plot_df["Hex_rep"][row] & plot_df["Bin_rep"][row]  == True:
                 hovertip    = "Raw: %{y:,.0f}<br>" + "Hex: %{y:.0x }<br>" + "Bin: %{y:.0b}<br>"
 
-            elif (plot_df["Hex"][row] == True) & (plot_df["Bin"][row]  == False):
+            elif (plot_df["Hex_rep"][row] == True) & (plot_df["Bin_rep"][row]  == False):
                 hovertip    = "Raw: %{y:,.0f}<br>" + "Hex: %{y:.0x}<br>"
                              
-            elif (plot_df["Hex"][row] == False) & (plot_df["Bin"][row]  == True):
+            elif (plot_df["Hex_rep"][row] == False) & (plot_df["Bin_rep"][row]  == True):
                 hovertip    = "Raw: %{y:,.0f}<br>" + "Bin: %{y:.0b}<br>"
                                   
             else:
@@ -178,15 +219,15 @@ def generate(df):
                      
             # Rename Signals
             if plot_df["Name"][row] == str():
-                Name = plot_df["Signal"][row]
+                Name = plot_df["Symbol"][row]
             else:
                 Name = plot_df["Name"][row]
 
             # Plot type
-            if plot_df["Type"][row] == 'lines':
+            if plot_df["Chart_type"][row] == 'lines':
                     plot.add_trace	(go.Scatter (  
-                                        x       		= dataframe[symbol_0],
-                                        y       		= dataframe[plot_df["Signal"][row]],
+                                        x       		= df[symbol_0],
+                                        y       		= df[plot_df["Symbol"][row]],
                                         name 			= Name,
                                         hovertemplate 	= hovertip,
                                         mode            = 'lines',
@@ -201,10 +242,10 @@ def generate(df):
                                     secondary_y         = y_axis_plot
                                     )
 
-            elif plot_df["Type"][row] == 'markers':
+            elif plot_df["Chart_type"][row] == 'markers':
                     plot.add_trace	(go.Scatter (  
-                                        x       		= dataframe[symbol_0],
-                                        y       		= dataframe[plot_df["Signal"][row]],
+                                        x       		= df[symbol_0],
+                                        y       		= df[plot_df["Symbol"][row]],
                                         name 			= Name,
                                         hovertemplate 	= hovertip,
                                         mode            = 'markers',
@@ -220,8 +261,8 @@ def generate(df):
                                     )
             else:
                     plot.add_trace	(go.Scatter (  
-                                        x       		= dataframe[symbol_0],
-                                        y       		= dataframe[plot_df["Signal"][row]],
+                                        x       		= df[symbol_0],
+                                        y       		= df[plot_df["Symbol"][row]],
                                         name 			= Name,
                                         hovertemplate 	= hovertip,
                                         mode            = 'lines+markers',
@@ -237,20 +278,20 @@ def generate(df):
                                     )
 
             # Summary table
-            max_signal      = max(dataframe[plot_df["Signal"][row]])
-            min_signal      = min(dataframe[plot_df["Signal"][row]])
-            mean_signal     = np.mean(dataframe[plot_df["Signal"][row]])
-            plotted_signal  = plot_df["Signal"][row]
+            max_signal      = max(dataframe[plot_df["Symbol"][row]])
+            min_signal      = min(dataframe[plot_df["Symbol"][row]])
+            mean_signal     = np.mean(dataframe[plot_df["Symbol"][row]])
+            plotted_signal  = plot_df["Symbol"][row]
             
             plot_sum.append([Name, plotted_signal, max_signal, min_signal ,mean_signal])
 
             # Table for plotted table
-            plotted_data[plot_df["Signal"][row]] = dataframe[plot_df["Signal"][row]]
+            plotted_data[plot_df["Symbol"][row]] = df[plot_df["Symbol"][row]]
 
             plot.update_layout	(
                                 hovermode	= "x",
                                 autosize    = True,
-                                height      = plotheight,
+                                height      = plotheight
                                 )
             
 
@@ -267,14 +308,6 @@ def generate(df):
     if checkbox_raw_table == True:
         st.subheader("Raw Data")
         st.write(dataframe)
-
-def plotsignals():
-    trace_1 = dict([('Signal', symbol_1), ('Name', name_1), ('Axis', axis_1), ('Color', color_1), ('Type', type_1),("Subplot",subplot_1), ("Style", style_1),("Size", size_1), ('Hex', hex_1),('Bin', bin_1), ('Function', function_1)  ])
-    trace_2 = dict([('Signal', symbol_2), ('Name', name_2), ('Axis', axis_2), ('Color', color_2), ('Type', type_2),("Subplot",subplot_2), ("Style", style_2),("Size", size_2), ('Hex', hex_2),('Bin', bin_2), ('Function', function_2)  ])
-    trace_3 = dict([('Signal', symbol_3), ('Name', name_3), ('Axis', axis_3), ('Color', color_3), ('Type', type_3),("Subplot",subplot_3), ("Style", style_3),("Size", size_3), ('Hex', hex_3),('Bin', bin_3), ('Function', function_3)  ])
-    trace_4 = dict([('Signal', symbol_4), ('Name', name_4), ('Axis', axis_4), ('Color', color_4), ('Type', type_4),("Subplot",subplot_4), ("Style", style_4),("Size", size_4), ('Hex', hex_4),('Bin', bin_4), ('Function', function_4)  ])
-    trace_5 = dict([('Signal', symbol_5), ('Name', name_5), ('Axis', axis_5), ('Color', color_5), ('Type', type_5),("Subplot",subplot_5), ("Style", style_5),("Size", size_5), ('Hex', hex_5),('Bin', bin_5), ('Function', function_5)  ])
-    return(trace_1,trace_2, trace_3,trace_4,trace_5)
 
 # Functions
 y_function_dict = {
@@ -295,9 +328,9 @@ st.sidebar.markdown('''<small>v0.1</small>''', unsafe_allow_html=True)
 with st.sidebar.beta_expander("📝 To Do"):
     st.write("- Make .exe")
     st.write("- Add support for differnt formats (.blf, m4f)")
-    st.write("- Dynamic generation of number of signals and their properties (i.e more than 5)")
+    st.write("- Dynamic generation of number of signals and their properties (i.e more than 5) ✔️")
     st.write("- Add functions")
-    st.write("- Allow deletion of annotation/shapes")
+    st.write("- Allow deletion of annotation/shapes ✔️")
     st.write("- Export as HTML")
     st.write("- Plotted data table generation ✔️")
     st.write("- Fix Multi Y axis ✔️")
@@ -326,49 +359,6 @@ if file_uploader is not None:
 
     # Use to NOT plot.
     symbols.insert(0, "Not Selected")
-    
-    # Color Palettes
-    if color_set == 'Default':
-        color_set_1 = px.colors.qualitative.Plotly[0]
-        color_set_2 = px.colors.qualitative.Plotly[1]
-        color_set_3 = px.colors.qualitative.Plotly[2]
-        color_set_4 = px.colors.qualitative.Plotly[3]
-        color_set_5 = px.colors.qualitative.Plotly[4]
-
-    if color_set == 'Pastel':
-        color_set_1 = Pastel_10.hex_colors[0]
-        color_set_2 = Pastel_10.hex_colors[1]
-        color_set_3 = Pastel_10.hex_colors[2]
-        color_set_4 = Pastel_10.hex_colors[3]
-        color_set_5 = Pastel_10.hex_colors[4]
-
-    if color_set == 'Paired':
-        color_set_1 = Paired_12.hex_colors[0]
-        color_set_2 = Paired_12.hex_colors[1]
-        color_set_3 = Paired_12.hex_colors[2]
-        color_set_4 = Paired_12.hex_colors[3]
-        color_set_5 = Paired_12.hex_colors[4]
-
-    if color_set == 'MS Office':
-        color_set_1 = Tableau_10.hex_colors[0]
-        color_set_2 = Tableau_10.hex_colors[1]
-        color_set_3 = Tableau_10.hex_colors[2]
-        color_set_4 = Tableau_10.hex_colors[3]
-        color_set_5 = Tableau_10.hex_colors[4]
-
-    if color_set == 'Light':
-        color_set_1 = px.colors.qualitative.Light24[0]
-        color_set_2 = px.colors.qualitative.Light24[1]
-        color_set_3 = px.colors.qualitative.Light24[2]
-        color_set_4 = px.colors.qualitative.Light24[3]
-        color_set_5 = px.colors.qualitative.Light24[4]
-
-    if color_set == 'Dark':
-        color_set_1 = px.colors.qualitative.Dark24[0]
-        color_set_2 = px.colors.qualitative.Dark24[1]
-        color_set_3 = px.colors.qualitative.Dark24[2]
-        color_set_4 = px.colors.qualitative.Dark24[3]
-        color_set_5 = px.colors.qualitative.Dark24[4]
 
     # Side bar items
     # X-Axis
@@ -376,199 +366,62 @@ if file_uploader is not None:
         symbol_0    = st.selectbox("Symbol", symbols, key="symbol_0")
         function_0  = st.multiselect('Functions', ['example:time2frequency'], key="function_0" )
 
-    # Signal 1
-    with st.sidebar.beta_expander("Signal 1", expanded=True):
-        symbol_1    = st.selectbox("Symbol", symbols, key="symbol_1")
+    total_signals = len(dataframe.columns)
+    color_counter = 0
+    if extra_signals > 0:
+        total_signals = total_signals + extra_signals
 
-        col_name, col_format = st.beta_columns((2,1))
-        name_1      = col_name.text_input("Rename Signal", "", key="name_1")
-        col_format.text("Format")
-        if col_format.checkbox("Hex",help = "Show Hex of Signal") == True:
-            hex_1 = True
+    for available_symbols in range(1, total_signals):
+        color_counter = color_counter + 1
+
+        if available_symbols <= 4:
+            expand_contaner = True
         else:
-            hex_1 = False
-        
-        if col_format.checkbox("Binary",help = "Show Binrary of Signal") == True:
-            bin_1 = True
-        else:
-            bin_1 = False
-        
-        col_axis, col_type, col_subplot = st.beta_columns(3)
-        axis_1      = col_axis.radio('Axis', ['y1','y2'], key="axis_1")
-        type_1      = col_type.radio('Type', ['lines','markers','lines+markers'], key="type_1" )
-        col_subplot.text("Subplot")
-        if col_subplot.checkbox("As Subplot", help = "With common X-Axis") == True:
-            subplot_1       = col_subplot.selectbox("Subplot",["Subplot 1","Subplot 2"], key="subplot_1")
-        else:
-            subplot_1       = "Main Plot"
+            expand_contaner = False
 
-        col_style, col_size, col_color = st.beta_columns(3)
-        color_1     = col_color.color_picker('Pick a color ',color_set_1,help="(Default:"+color_set_1+")", key="color_1")
-        size_1      = col_size.number_input("Size", min_value=0.0, max_value=10.0, value=2.0, step=0.5, key="size_1")
+        if color_counter > len(color_palaette)-1:
+            color_counter = 0
 
-        if type_1   == 'lines':
-            style_1 = col_style.selectbox("Style", ["solid", "dot", "dash", "longdash", "dashdot","longdashdot"], key="style_1")
-        if type_1   == 'markers':
-            style_1 = col_style.selectbox("Style", ["circle", "square", "diamond", "cross", "x","cross-thin","x-thin","triangle-up","triangle-down","triangle-left","triangle-right",'y-up','y-down'], key="style_1")
-        
-        col_function, col_function_var = st.beta_columns((2,1))
-        function_1  = col_function.multiselect('Functions', y_functions, key="function_1" )
-        
-        if function_1   == 'gain':
-            col_function_var.write("ss")
-            function_1_var = col_function_var.number_input("Gain", min_value=-100000.0, max_value=100000.0, value=1.0, step=0.00001, key="size_1")
-        if function_1   == 'offset':
-            function_1_var = col_function_var.number_input("Offset", min_value=-100000.0, max_value=100000.0, value=1.0, step=0.00001, key="size_1")       
+        with st.sidebar.beta_expander("Signal "+str(available_symbols), expanded=expand_contaner):
+            # Symbol
+            trace["Symbol"].append(st.selectbox("Symbol", symbols, key="symbol_"+str(available_symbols)))
+            
+            col_name, col_format = st.beta_columns((2,1))
+            # Rename signal
+            trace["Name"].append(col_name.text_input("Rename Signal", "", key="name_"+str(available_symbols)))
+            
+            col_format.text("Format")
+            # Hex representation
+            trace["Hex_rep"].append(col_format.checkbox("Hex",help = "Show Hex of Signal", key="hex_"+str(available_symbols)))
+            # Binrary representation
+            trace["Bin_rep"].append(col_format.checkbox("Binary",help = "Show Binrary of Signal", key="bin_"+str(available_symbols)))
 
-    # Signal 2    
-    with st.sidebar.beta_expander("Signal 2"):
-        symbol_2    = st.selectbox("Symbol", symbols, key="symbol_2")
+            col_axis,col_color, col_subplot = st.beta_columns(3)
+            # Y Axis
+            trace["Axis"].append(col_axis.radio('Axis', ['y1','y2'], key="axis_"+str(available_symbols)))
+            # Color
+            trace["Color"].append(col_color.color_picker('Pick a color ',color_palaette[color_counter],help="(Default:"+color_palaette[color_counter]+")", key="color_"+str(available_symbols)))
+            # Subplot
+            trace["Plot_row"].append(col_subplot.selectbox("Subplot",["Main Plot","Subplot 1","Subplot 2"], key="subplot_"+str(available_symbols)))
 
-        col_name, col_format = st.beta_columns((2,1))
-        name_2      = col_name.text_input("Rename Signal", "", key="name_2")
-        col_format.text("Format")
-        hex_2       = col_format.checkbox("Hex",key="hex_2")
-        bin_2       = col_format.checkbox("Binary",key="bin_2")
-        
-        col_axis, col_type, col_subplot = st.beta_columns(3)
-        axis_2      = col_axis.radio('Axis', ['y1','y2'], key="axis_2")
-        type_2      = col_type.radio('Type', ['lines','markers','lines+markers'], key="type_2" )
-        col_subplot.text("Subplot")
-        if col_subplot.checkbox("As Subplot",key="subplot_2") == True:
-            subplot_2       = col_subplot.selectbox("Subplot",["Subplot 1","Subplot 2"], key="subplot_2")
-        else:
-            subplot_2       = "Main Plot"
-
-        col_style, col_size, col_color = st.beta_columns(3)
-        color_2     = col_color.color_picker('Pick a color ',color_set_2,help="(Default:"+color_set_2+")", key="color_2")
-        size_2      = col_size.number_input("Size", min_value=0.0, max_value=10.0, value=2.0, step=0.5, key="size_2")
-
-        if type_2   == 'lines':
-            style_2 = col_style.selectbox("Style", ["solid", "dot", "dash", "longdash", "dashdot","longdashdot"], key="style_2")
-        if type_2   == 'markers':
-            style_2 = col_style.selectbox("Style", ["circle", "square", "diamond", "cross", "x","cross-thin","x-thin","triangle-up","triangle-down","triangle-left","triangle-right",'y-up','y-down'], key="style_2")
-        
-        col_function, col_function_var = st.beta_columns((2,1))
-        function_2  = col_function.multiselect('Functions', y_functions, key="function_2" )
-        
-        if function_2   == 'gain':
-            col_function_var.write("ss")
-            function_2_var = col_function_var.number_input("Gain", min_value=-100000.0, max_value=100000.0, value=1.0, step=0.00001, key="size_2")
-        if function_2   == 'offset':
-            function_2_var = col_function_var.number_input("Offset", min_value=-100000.0, max_value=100000.0, value=1.0, step=0.00001, key="size_2")    
-        
-    with st.sidebar.beta_expander("Signal 3"):
-        symbol_3    = st.selectbox("Symbol", symbols, key="symbol_3")
-
-        col_name, col_format = st.beta_columns((2,1))
-        name_3      = col_name.text_input("Rename Signal", "", key="name_3")
-        col_format.text("Format")
-        hex_3       = col_format.checkbox("Hex",key="hex_3")
-        bin_3       = col_format.checkbox("Binary",key="bin_3")
-        
-        col_axis, col_type, col_subplot = st.beta_columns(3)
-        axis_3      = col_axis.radio('Axis', ['y1','y2'], key="axis_3")
-        type_3      = col_type.radio('Type', ['lines','markers','lines+markers'], key="type_3" )
-        col_subplot.text("Subplot")
-        if col_subplot.checkbox("As Subplot",key="subplot_3") == True:
-            subplot_3       = col_subplot.selectbox("Subplot",["Subplot 1","Subplot 2"], key="subplot_3")
-        else:
-            subplot_3       = "Main Plot"
-
-        col_style, col_size, col_color = st.beta_columns(3)
-        color_3     = col_color.color_picker('Pick a color ',color_set_3,help="(Default:"+color_set_3+")", key="color_3")
-        size_3      = col_size.number_input("Size", min_value=0.0, max_value=10.0, value=2.0, step=0.5, key="size_3")
-
-        if type_3   == 'lines':
-            style_3 = col_style.selectbox("Style", ["solid", "dot", "dash", "longdash", "dashdot","longdashdot"], key="style_3")
-        if type_3   == 'markers':
-            style_3 = col_style.selectbox("Style", ["circle", "square", "diamond", "cross", "x","cross-thin","x-thin","triangle-up","triangle-down","triangle-left","triangle-right",'y-up','y-down'], key="style_3")
-        
-        col_function, col_function_var = st.beta_columns((2,1))
-        function_3  = col_function.multiselect('Functions', y_functions, key="function_3" )
-        
-        if function_3   == 'gain':
-            col_function_var.write("ss")
-            function_3_var = col_function_var.number_input("Gain", min_value=-100000.0, max_value=100000.0, value=1.0, step=0.00001, key="size_3")
-        if function_3   == 'offset':
-            function_3_var = col_function_var.number_input("Offset", min_value=-100000.0, max_value=100000.0, value=1.0, step=0.00001, key="size_3")  
-
-    with st.sidebar.beta_expander("Signal 4"):
-        symbol_4    = st.selectbox("Symbol", symbols, key="symbol_4")
-
-        col_name, col_format = st.beta_columns((2,1))
-        name_4      = col_name.text_input("Rename Signal", "", key="name_4")
-        col_format.text("Format")
-        hex_4       = col_format.checkbox("Hex",key="hex_4")
-        bin_4       = col_format.checkbox("Binary",key="bin_4")
-        
-        col_axis, col_type, col_subplot = st.beta_columns(3)
-        axis_4      = col_axis.radio('Axis', ['y1','y2'], key="axis_4")
-        type_4      = col_type.radio('Type', ['lines','markers','lines+markers'], key="type_4" )
-        col_subplot.text("Subplot")
-        if col_subplot.checkbox("As Subplot",key="subplot_4") == True:
-            subplot_4       = col_subplot.selectbox("Subplot",["Subplot 1","Subplot 2"], key="subplot_4")
-        else:
-            subplot_4       = "Main Plot"
-
-        col_style, col_size, col_color = st.beta_columns(3)
-        color_4     = col_color.color_picker('Pick a color ',color_set_4,help="(Default:"+color_set_4+")", key="color_4")
-        size_4      = col_size.number_input("Size", min_value=0.0, max_value=10.0, value=2.0, step=0.5, key="size_4")
-
-        if type_4   == 'lines':
-            style_4 = col_style.selectbox("Style", ["solid", "dot", "dash", "longdash", "dashdot","longdashdot"], key="style_4")
-        if type_4   == 'markers':
-            style_4 = col_style.selectbox("Style", ["circle", "square", "diamond", "cross", "x","cross-thin","x-thin","triangle-up","triangle-down","triangle-left","triangle-right",'y-up','y-down'], key="style_4")
-        
-        col_function, col_function_var = st.beta_columns((2,1))
-        function_4  = col_function.multiselect('Functions', y_functions, key="function_4" )
-        
-        if function_4   == 'gain':
-            col_function_var.write("ss")
-            function_4_var = col_function_var.number_input("Gain", min_value=-100000.0, max_value=100000.0, value=1.0, step=0.00001, key="size_4")
-        if function_4   == 'offset':
-            function_4_var = col_function_var.number_input("Offset", min_value=-100000.0, max_value=100000.0, value=1.0, step=0.00001, key="size_4")     
-        
-    with st.sidebar.beta_expander("Signal 5"):
-        symbol_5    = st.selectbox("Symbol", symbols, key="symbol_5")
-
-        col_name, col_format = st.beta_columns((2,1))
-        name_5      = col_name.text_input("Rename Signal", "", key="name_5")
-        col_format.text("Format")
-        hex_5       = col_format.checkbox("Hex",key="hex_5")
-        bin_5       = col_format.checkbox("Binary",key="bin_5")
-        
-        col_axis, col_type, col_subplot = st.beta_columns(3)
-        axis_5      = col_axis.radio('Axis', ['y1','y2'], key="axis_5")
-        type_5      = col_type.radio('Type', ['lines','markers','lines+markers'], key="type_5" )
-        col_subplot.text("Subplot")
-        if col_subplot.checkbox("As Subplot",key="subplot_5") == True:
-            subplot_5       = col_subplot.selectbox("Subplot",["Subplot 1","Subplot 2"], key="subplot_5")
-        else:
-            subplot_5       = "Main Plot"
-
-        col_style, col_size, col_color = st.beta_columns(3)
-        color_5     = col_color.color_picker('Pick a color ',color_set_5,help="(Default:"+color_set_5+")", key="color_5")
-        size_5      = col_size.number_input("Size", min_value=0.0, max_value=10.0, value=2.0, step=0.5, key="size_5")
-
-        if type_5   == 'lines':
-            style_5 = col_style.selectbox("Style", ["solid", "dot", "dash", "longdash", "dashdot","longdashdot"], key="style_5")
-        if type_5   == 'markers':
-            style_5 = col_style.selectbox("Style", ["circle", "square", "diamond", "cross", "x","cross-thin","x-thin","triangle-up","triangle-down","triangle-left","triangle-right",'y-up','y-down'], key="style_5")
-        
-        col_function, col_function_var = st.beta_columns((2,1))
-        function_5  = col_function.multiselect('Functions', y_functions, key="function_5" )
-        
-        if function_5   == 'gain':
-            col_function_var.write("ss")
-            function_5_var = col_function_var.number_input("Gain", min_value=-100000.0, max_value=100000.0, value=1.0, step=0.00001, key="size_5")
-        if function_5   == 'offset':
-            function_5_var = col_function_var.number_input("Offset", min_value=-100000.0, max_value=100000.0, value=1.0, step=0.00001, key="size_5")    
+            ## Formatting
+            col_type, col_style, col_size  = st.beta_columns(3)
+            trace["Chart_type"].append(col_type.radio('Type', ['lines','markers','lines+markers'], key="type_"+str(available_symbols) ))
+            if  trace["Chart_type"][available_symbols-1] == 'lines':
+                trace["Style"].append(col_style.selectbox("Style", ["solid", "dot", "dash", "longdash", "dashdot","longdashdot"], key="style_"+str(available_symbols)))
+            if  trace["Chart_type"][available_symbols-1] == 'markers':
+                trace["Style"].append(col_style.selectbox("Style", ["circle", "square", "diamond", "cross", "x","cross-thin","x-thin","triangle-up","triangle-down","triangle-left","triangle-right",'y-up','y-down'], key="style_"+str(available_symbols)))
+            trace["Size"].append(col_size.number_input("Size", min_value=0.0, max_value=10.0, value=2.0, step=0.5, key="size_"+str(available_symbols)))
 
 # Generate
-if st.button("Generate"):
-    Y_s = plotsignals()
-
-    generate(dataframe)
+if st.button("Generate"):   
+    plot_sum = []
+    plotted_data        = pd.DataFrame()
+    subplot             = 1
+    plot_df             = pd.DataFrame(trace)
+    plot_df             = plot_df[plot_df["Symbol"]!='Not Selected']
+    plot_df.reset_index(inplace=True)
+    
+    generate(dataframe, plot_df)
 
 st.markdown("""---""")
