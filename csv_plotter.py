@@ -21,15 +21,15 @@ st.set_page_config  (
 config = dict   ({
     'scrollZoom'            : True,
     'displayModeBar'        : True,
-    'editable'              : False,
-    'modeBarButtonsToAdd'   :   [
-                                'drawline',
-                                'drawopenpath',
-                                'drawclosedpath',
-                                'drawcircle',
-                                'drawrect',
-                                'eraseshape'
-                                ],
+    'editable'              : True,
+    #'modeBarButtonsToAdd'   :   [
+    #                            'drawline',
+    #                            'drawopenpath',
+    #                            'drawclosedpath',
+    #                            'drawcircle',
+    #                            'drawrect',
+    #                            'eraseshape'
+    #                            ],
     'toImageButtonOptions'  :   {'format': 'svg'}
                 })
 
@@ -86,16 +86,18 @@ if color_set == 'Dark':
         color_palaette.append(px.colors.qualitative.Dark24[i])
 
 trace =  dict()
-trace["Symbol"] = []
-trace["Name"] = []
-trace["Hex_rep"] = []
-trace["Bin_rep"] = []
-trace["Plot_row"] = []
-trace["Axis"] = []
-trace["Color"] = []
-trace["Size"] = []
-trace["Style"] = []
+trace["Symbol"]     = []
+trace["Name"]       = []
+trace["Hex_rep"]    = []
+trace["Bin_rep"]    = []
+trace["Plot_row"]   = []
+trace["Axis"]       = []
+trace["Color"]      = []
+trace["Size"]       = []
+trace["Style"]      = []
 trace["Chart_type"] = []
+trace["Function"]   = []
+function_applied    = []
 
 # Functions
 # SIGNAL FUNCTIONS
@@ -130,6 +132,10 @@ def degree2revs(angle_degree):
 def revs2degree(angle_revs):
     angle_degree = angle_revs * 360
     return angle_degree
+
+def time2frequency(time):
+    frequency = 1/time
+    return frequency
 
 def generate(df, plot_df):
     
@@ -192,17 +198,17 @@ def generate(df, plot_df):
             else:
                 y_axis_plot = True
 
-            # Apply function(s) to signal
+            ## Apply function(s) to signal
             #if plot_df["Function"][row] != []:
-            #    signal_function_name = str(plot_df["Signal"][row])
-
+            #    signal_function_name = str(plot_df["Symbol"][row])
+#
             #    for items in plot_df["Function"][row]:
             #        signal_functions.append(items)
-            #    
+            #   
             #    for i in signal_functions:
             #        signal_function_name = signal_function_name  + '[' + i + ']'
-            #        dataframe[signal_function_name] =  dataframe[plot_df["Signal"][row]].apply(y_function_dict[i])
-            #        plot_df["Signal"][row] = signal_function_name
+            #        dataframe[signal_function_name] =  dataframe[plot_df["Symbol"][row]].apply(y_function_dict[i])
+            #        plot_df["Symbol"][row] = signal_function_name
             
             # Show hex / binrary 
             if plot_df["Hex_rep"][row] & plot_df["Bin_rep"][row]  == True:
@@ -330,7 +336,7 @@ with st.sidebar.beta_expander("📝 To Do"):
     st.write("- Add support for differnt formats (.blf, m4f)")
     st.write("- Dynamic generation of number of signals and their properties (i.e more than 5) ✔️")
     st.write("- Add functions")
-    st.write("- Allow deletion of annotation/shapes ✔️")
+    st.write("- Allow annotation/shapes ⚠️: Can't be done in plotly yet (conflicts with placeholder labels)")
     st.write("- Export as HTML")
     st.write("- Plotted data table generation ✔️")
     st.write("- Fix Multi Y axis ✔️")
@@ -364,7 +370,7 @@ if file_uploader is not None:
     # X-Axis
     with st.sidebar.beta_expander("X Axis", expanded=True):
         symbol_0    = st.selectbox("Symbol", symbols, key="symbol_0")
-        function_0  = st.multiselect('Functions', ['example:time2frequency'], key="function_0" )
+        function_0  = st.multiselect('Functions', ['time2frequency','gain'], key="function_0" )
 
     total_signals = len(dataframe.columns)
     color_counter = 0
@@ -413,10 +419,28 @@ if file_uploader is not None:
                 trace["Style"].append(col_style.selectbox("Style", ["circle", "square", "diamond", "cross", "x","cross-thin","x-thin","triangle-up","triangle-down","triangle-left","triangle-right",'y-up','y-down'], key="style_"+str(available_symbols)))
             trace["Size"].append(col_size.number_input("Size", min_value=0.0, max_value=10.0, value=2.0, step=0.5, key="size_"+str(available_symbols)))
 
+            # Functions
+            col_function, col_function_var = st.beta_columns((2))
+
+            function_chosen = (col_function.multiselect('Functions', y_functions, key="function_"+str(available_symbols) ) )
+            if function_chosen == []:
+                trace["Function"].append('Not Selected')
+                st.write("Not Selected1")
+            
+            for functions in range(0,len(function_chosen)):
+                if 'gain' in function_chosen[functions]:
+                    function_applied = col_function_var.text_input("Gain", key="function_applied_"+str(functions))
+                else:
+                    function_applied = 'None'
+                st.write(function_applied)
+
+            
+
 # Generate
 if st.button("Generate"):   
     plot_sum = []
     plotted_data        = pd.DataFrame()
+    #signal_functions    = []
     subplot             = 1
     plot_df             = pd.DataFrame(trace)
     plot_df             = plot_df[plot_df["Symbol"]!='Not Selected']
