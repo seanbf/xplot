@@ -96,9 +96,12 @@ trace["Color"]      = []
 trace["Size"]       = []
 trace["Style"]      = []
 trace["Chart_type"] = []
-trace["Function"]   = []
+trace["Function"]   =   {   'Function'  :[],
+                            'Value'     :[] }
+
 function_applied    = []
 y_axis_spec         = []
+trace_function      = []
 
 # Functions
 # SIGNAL FUNCTIONS
@@ -140,26 +143,35 @@ def time2frequency(time):
 
 def generate(df, plot_config):
     
+    # Main Plot Secondary Y's
     secondary_y =  plot_config.loc[plot_config['Plot_row'] == 'Main Plot']
-    st.write(y_axis_spec)
+
+    
     if len(secondary_y["Axis"].unique()) == 1:
         y_axis_spec.append([{'secondary_y': False}])
+
     elif len(secondary_y["Axis"].unique()) == 2:
         y_axis_spec.append([{'secondary_y': True}])
     else:
         pass
 
+    # Subplot 1 Secondary Y's
     secondary_y =  plot_config.loc[plot_config['Plot_row'] == 'Subplot 1']
+
     if len(secondary_y["Axis"].unique()) == 1:
         y_axis_spec.append([{'secondary_y': False}])
+
     elif len(secondary_y["Axis"].unique()) == 2:
         y_axis_spec.append([{'secondary_y': True}])
     else:
         pass
-
+    
+    # Subplot 2 Secondary Y's
     secondary_y =  plot_config.loc[plot_config['Plot_row'] == 'Subplot 2']
+
     if len(secondary_y["Axis"].unique()) == 1:
         y_axis_spec.append([{'secondary_y': False}])
+
     elif len(secondary_y["Axis"].unique()) == 2:
         y_axis_spec.append([{'secondary_y': True}])
     else:
@@ -201,7 +213,7 @@ def generate(df, plot_config):
             ## Apply function(s) to signal
             #if plot_config["Function"][row] != []:
             #    signal_function_name = str(plot_config["Symbol"][row])
-#
+
             #    for items in plot_config["Function"][row]:
             #        signal_functions.append(items)
             #   
@@ -326,8 +338,6 @@ y_function_dict = {
                 'degree2revs':degree2revs,
                 'revs2degree':revs2degree
                 }
-                
-y_functions = pd.DataFrame(y_function_dict.keys())
 
 st.sidebar.markdown('''<small>v0.1</small>''', unsafe_allow_html=True)
 
@@ -422,25 +432,60 @@ if file_uploader is not None:
             # Functions
             col_function, col_function_var = st.beta_columns((2))
 
-            function_chosen = (col_function.multiselect('Functions', y_functions, key="function_"+str(available_symbols) ) )
-            if function_chosen == []:
-                trace["Function"].append('Not Selected')
-                st.write("Not Selected1")
-            
-            for functions in range(0,len(function_chosen)):
-                if 'gain' in function_chosen[functions]:
-                    function_applied = col_function_var.text_input("Gain", key="function_applied_"+str(functions))
-                else:
-                    function_applied = 'None'
-                st.write(function_applied)
+            function_chosen = (col_function.multiselect('Functions', list(y_function_dict.keys()) ,default=[], key="function_"+str(available_symbols) ) )
 
-            
+            trace_function = []
+            trace_function_value = []
+
+            if len(function_chosen) != 0:            
+
+                for functions in range(0, len(function_chosen)):
+                    if 'gain' in function_chosen[functions]:
+                        trace_function.append("gain")
+                        trace_function_value.append(float(col_function_var.text_input("Gain",0, key="gain_"+str(available_symbols))) )
+
+                    if 'offset' in function_chosen[functions]:
+                        trace_function.append("offset")
+                        trace_function_value.append(float(col_function_var.text_input("Offset",0, key="offset_"+str(available_symbols))) )
+
+                    if 'rms2peak' in function_chosen[functions]:
+                        trace_function.append("rms2peak")
+                        trace_function_value.append(None)
+                        
+                    if 'peak2rms' in function_chosen[functions]:
+                        trace_function.append("peak2rms")
+                        trace_function_value.append(None)
+
+                    if 'rpm2rads' in function_chosen[functions]:
+                        trace_function.append("rpm2rads")
+                        trace_function_value.append(None)
+
+                    if 'rads2rpm' in function_chosen[functions]:
+                        trace_function.append("rads2rpm")
+                        trace_function_value.append(None)
+
+                    if 'degree2revs' in function_chosen[functions]: 
+                        trace_function.append("degree2revs")
+                        trace_function_value.append(None)
+
+                    if 'revs2degree' in function_chosen[functions]: 
+                        trace_function.append("revs2degree")
+                        trace_function_value.append(None)
+
+                #if ('gain' not in function_chosen) & ('offset' not in function_chosen) :
+                    #trace_function_value = None
+
+                trace["Function"]["Function"].append(trace_function)
+                trace["Function"]["Value"].append(trace_function_value)
+
+            else:
+                trace["Function"]["Function"].append('Not Selected')
+                trace["Function"]["Value"].append(None)      
 
 # Generate
 if st.button("Generate"):   
     plot_sum = []
     plotted_data        = pd.DataFrame()
-    #signal_functions    = []
     subplot             = 1
     plot_config             = pd.DataFrame(trace)
     plot_config             = plot_config[plot_config["Symbol"]!='Not Selected']
