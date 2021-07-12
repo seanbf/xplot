@@ -96,50 +96,61 @@ trace["Color"]      = []
 trace["Size"]       = []
 trace["Style"]      = []
 trace["Chart_type"] = []
-trace["Function"]   =   {   'Function'  :[],
-                            'Value'     :[] }
+trace["Function"]   = []
+trace["Value"]      = []
 
-function_applied    = []
 y_axis_spec         = []
 trace_function      = []
+signal_functions    = []
+
 
 # Functions
 # SIGNAL FUNCTIONS
+@st.cache
 def gain(signal, gain):
     signal_gain = signal*gain
     return signal_gain
-    
+
+@st.cache   
 def offset(signal, offset):
     signal_offset = signal + offset
     return signal_offset
-    
+
+@st.cache    
 def rms2peak(signal_rms):
     signal_peak = signal_rms * np.sqrt(2)
     return signal_peak
-    
+
+@st.cache    
 def peak2rms(signal_peak):
     signal_rms = signal_peak / np.sqrt(2)
     return signal_rms
-    
+
+@st.cache    
 def rpm2rads(speed_rpm):
     speed_rads = (speed_rpm / 60) * (2 * np.pi)
     return speed_rads
-    
+
+@st.cache    
 def rads2rpm(speed_rads):
     speed_rpm = (speed_rads / (2 * np.pi)) * 60
     return speed_rpm
-    
+
+@st.cache    
 def degree2revs(angle_degree):
     angle_revs = angle_degree / 360
     return angle_revs
-    
+
+@st.cache    
 def revs2degree(angle_revs):
     angle_degree = angle_revs * 360
     return angle_degree
 
+@st.cache
 def time2frequency(time):
     frequency = 1/time
     return frequency
+
 
 def generate(df, plot_config):
     
@@ -210,18 +221,33 @@ def generate(df, plot_config):
             else:
                 y_axis_plot = True
 
-            ## Apply function(s) to signal
-            #if plot_config["Function"][row] != []:
-            #    signal_function_name = str(plot_config["Symbol"][row])
+            signal_function_label = []
 
-            #    for items in plot_config["Function"][row]:
-            #        signal_functions.append(items)
-            #   
-            #    for i in signal_functions:
-            #        signal_function_name = signal_function_name  + '[' + i + ']'
-            #        dataframe[signal_function_name] =  dataframe[plot_config["Symbol"][row]].apply(y_function_dict[i])
-            #        plot_config["Symbol"][row] = signal_function_name
-            
+            ## Apply function(s) to signal
+            if plot_config["Function"][row] != "Not Selected":
+                signal_function_name = str(plot_config["Symbol"][row])
+
+                for items in plot_config["Function"][row]:
+                    for values in plot_config["Value"][row]:
+                        st.write("values" + str(values))
+                        if values != None:
+                            value = '(' + str(values) + ')'
+
+                        elif values == None:
+                            value = ""
+
+                        signal_function_label.append('[' + items + value + ']')
+                        st.write(signal_function_label)
+                        signal_functions.append(items)
+
+                listToStr = ' '.join([str(elem) for elem in signal_function_label])
+                signal_function_name = signal_function_name + listToStr
+                st.write(signal_function_name)
+
+                #for i in signal_functions:
+                    #dataframe[signal_function_name] =  dataframe[plot_config["Symbol"][row]].apply(y_function_dict[i])
+                    #plot_config["Symbol"][row] = signal_function_name
+
             # Show hex / binrary 
             if plot_config["Hex_rep"][row] & plot_config["Bin_rep"][row]  == True:
                 hovertip    = "Raw: %{y:,.0f}<br>" + "Hex: %{y:.0x }<br>" + "Bin: %{y:.0b}<br>"
@@ -423,10 +449,13 @@ if file_uploader is not None:
             ## Formatting
             col_type, col_style, col_size  = st.beta_columns(3)
             trace["Chart_type"].append(col_type.radio('Type', ['lines','markers','lines+markers'], key="type_"+str(available_symbols) ))
+            
             if  trace["Chart_type"][available_symbols-1] == 'lines':
                 trace["Style"].append(col_style.selectbox("Style", ["solid", "dot", "dash", "longdash", "dashdot","longdashdot"], key="style_"+str(available_symbols)))
+            
             if  trace["Chart_type"][available_symbols-1] == 'markers':
                 trace["Style"].append(col_style.selectbox("Style", ["circle", "square", "diamond", "cross", "x","cross-thin","x-thin","triangle-up","triangle-down","triangle-left","triangle-right",'y-up','y-down'], key="style_"+str(available_symbols)))
+            
             trace["Size"].append(col_size.number_input("Size", min_value=0.0, max_value=10.0, value=2.0, step=0.5, key="size_"+str(available_symbols)))
 
             # Functions
@@ -472,25 +501,23 @@ if file_uploader is not None:
                         trace_function.append("revs2degree")
                         trace_function_value.append(None)
 
-                #if ('gain' not in function_chosen) & ('offset' not in function_chosen) :
-                    #trace_function_value = None
-
-                trace["Function"]["Function"].append(trace_function)
-                trace["Function"]["Value"].append(trace_function_value)
+                trace["Function"].append(trace_function)
+                trace["Value"].append(trace_function_value)
 
             else:
-                trace["Function"]["Function"].append('Not Selected')
-                trace["Function"]["Value"].append(None)      
+                trace["Function"].append('Not Selected')
+                trace["Value"].append(None)      
 
 # Generate
 if st.button("Generate"):   
-    plot_sum = []
+    plot_config     = pd.DataFrame(trace)
+    plot_config     = plot_config[plot_config["Symbol"]!='Not Selected']
+    plot_config.reset_index(inplace=True)
+    plot_sum            = []
+
     plotted_data        = pd.DataFrame()
     subplot             = 1
-    plot_config             = pd.DataFrame(trace)
-    plot_config             = plot_config[plot_config["Symbol"]!='Not Selected']
-    plot_config.reset_index(inplace=True)
-    
+
     generate(dataframe, plot_config)
 
 st.markdown("""---""")
