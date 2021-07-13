@@ -221,33 +221,6 @@ def generate(df, plot_config):
             else:
                 y_axis_plot = True
 
-            signal_function_label = []
-
-            ## Apply function(s) to signal
-            if plot_config["Function"][row] != "Not Selected":
-                signal_function_name = str(plot_config["Symbol"][row])
-
-                for items in plot_config["Function"][row]:
-                    for values in plot_config["Value"][row]:
-                        st.write("values" + str(values))
-                        if values != None:
-                            value = '(' + str(values) + ')'
-
-                        elif values == None:
-                            value = ""
-
-                        signal_function_label.append('[' + items + value + ']')
-                        st.write(signal_function_label)
-                        signal_functions.append(items)
-
-                listToStr = ' '.join([str(elem) for elem in signal_function_label])
-                signal_function_name = signal_function_name + listToStr
-                st.write(signal_function_name)
-
-                #for i in signal_functions:
-                    #dataframe[signal_function_name] =  dataframe[plot_config["Symbol"][row]].apply(y_function_dict[i])
-                    #plot_config["Symbol"][row] = signal_function_name
-
             # Show hex / binrary 
             if plot_config["Hex_rep"][row] & plot_config["Bin_rep"][row]  == True:
                 hovertip    = "Raw: %{y:,.0f}<br>" + "Hex: %{y:.0x }<br>" + "Bin: %{y:.0b}<br>"
@@ -266,6 +239,31 @@ def generate(df, plot_config):
                 Name = plot_config["Symbol"][row]
             else:
                 Name = plot_config["Name"][row]
+
+            ## Apply function(s) to signal
+            # Function signal name
+            Function_and_Value  = []
+            fun_and_val         = ''
+
+            if plot_config["Function"][row] != 'Not Selected':
+                for j in range(0, len(plot_config["Function"][row])):
+
+                    if plot_config["Value"][row][j] != "None":
+                        Value_string = '(' + str(plot_config["Value"][row][j]) + ')'
+
+                    else:
+                        Value_string = ''
+
+                    Function_string = str(plot_config["Function"][row][j])
+
+                    Function_and_Value.append(' {' + Function_string + Value_string + '}')
+
+                for k in Function_and_Value:
+                    Function_Value_String = fun_and_val + k
+            else:
+                Function_Value_String = ''
+
+            Name = str(Name) + Function_Value_String
 
             # Plot type
             if plot_config["Chart_type"][row] == 'lines':
@@ -479,45 +477,46 @@ if file_uploader is not None:
 
                     if 'rms2peak' in function_chosen[functions]:
                         trace_function.append("rms2peak")
-                        trace_function_value.append(None)
+                        trace_function_value.append("None")
                         
                     if 'peak2rms' in function_chosen[functions]:
                         trace_function.append("peak2rms")
-                        trace_function_value.append(None)
+                        trace_function_value.append("None")
 
                     if 'rpm2rads' in function_chosen[functions]:
                         trace_function.append("rpm2rads")
-                        trace_function_value.append(None)
+                        trace_function_value.append("None")
 
                     if 'rads2rpm' in function_chosen[functions]:
                         trace_function.append("rads2rpm")
-                        trace_function_value.append(None)
+                        trace_function_value.append("None")
 
                     if 'degree2revs' in function_chosen[functions]: 
                         trace_function.append("degree2revs")
-                        trace_function_value.append(None)
+                        trace_function_value.append("None")
 
                     if 'revs2degree' in function_chosen[functions]: 
                         trace_function.append("revs2degree")
-                        trace_function_value.append(None)
+                        trace_function_value.append("None")
 
                 trace["Function"].append(trace_function)
                 trace["Value"].append(trace_function_value)
 
             else:
                 trace["Function"].append('Not Selected')
-                trace["Value"].append(None)      
-
+                trace["Value"].append("None")      
+""
 # Generate
 if st.button("Generate"):   
     plot_config     = pd.DataFrame(trace)
     plot_config     = plot_config[plot_config["Symbol"]!='Not Selected']
+
     plot_config.reset_index(inplace=True)
     plot_sum            = []
 
     plotted_data        = pd.DataFrame()
     subplot             = 1
-
+    st.write(plot_config)
     generate(dataframe, plot_config)
 
 st.markdown("""---""")
