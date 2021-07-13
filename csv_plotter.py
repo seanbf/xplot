@@ -156,7 +156,6 @@ def generate(df, plot_config):
     
     # Main Plot Secondary Y's
     secondary_y =  plot_config.loc[plot_config['Plot_row'] == 'Main Plot']
-
     
     if len(secondary_y["Axis"].unique()) == 1:
         y_axis_spec.append([{'secondary_y': False}])
@@ -243,7 +242,7 @@ def generate(df, plot_config):
             ## Apply function(s) to signal
             # Function signal name
             Function_and_Value  = []
-            fun_and_val         = ''
+            Function_Value_String         = ''
 
             if plot_config["Function"][row] != 'Not Selected':
                 for j in range(0, len(plot_config["Function"][row])):
@@ -259,17 +258,26 @@ def generate(df, plot_config):
                     Function_and_Value.append(' {' + Function_string + Value_string + '}')
 
                 for k in Function_and_Value:
-                    Function_Value_String = fun_and_val + k
-            else:
-                Function_Value_String = ''
+                    Function_Value_String = Function_Value_String + k
 
-            Name = str(Name) + Function_Value_String
+                Name = str(Name) + Function_Value_String
+                temp_col = df[plot_config["Symbol"][row]]
+                for j in range(0, len(plot_config["Function"][row])):
+                    if plot_config["Value"][row][j] == "None":
+                        temp_col = np.vectorize(y_function_dict[plot_config["Function"][row][j]])(temp_col)
+                    else:
+                        temp_col = np.vectorize(y_function_dict[plot_config["Function"][row][j]])(temp_col, plot_config["Value"][row][j] )
+
+                df[Name] = temp_col
+                y_axis_symbol = df[Name]
+            else:
+                y_axis_symbol = df[plot_config["Symbol"][row]]
 
             # Plot type
             if plot_config["Chart_type"][row] == 'lines':
                     plot.add_trace	(go.Scatter (  
                                         x       		= df[symbol_0],
-                                        y       		= df[plot_config["Symbol"][row]],
+                                        y       		= y_axis_symbol,
                                         name 			= Name,
                                         hovertemplate 	= hovertip,
                                         mode            = 'lines',
@@ -287,7 +295,7 @@ def generate(df, plot_config):
             elif plot_config["Chart_type"][row] == 'markers':
                     plot.add_trace	(go.Scatter (  
                                         x       		= df[symbol_0],
-                                        y       		= df[plot_config["Symbol"][row]],
+                                        y       		= y_axis_symbol,
                                         name 			= Name,
                                         hovertemplate 	= hovertip,
                                         mode            = 'markers',
@@ -304,7 +312,7 @@ def generate(df, plot_config):
             else:
                     plot.add_trace	(go.Scatter (  
                                         x       		= df[symbol_0],
-                                        y       		= df[plot_config["Symbol"][row]],
+                                        y       		= y_axis_symbol,
                                         name 			= Name,
                                         hovertemplate 	= hovertip,
                                         mode            = 'lines+markers',
@@ -320,15 +328,15 @@ def generate(df, plot_config):
                                     )
 
             # Summary table
-            max_signal      = max(dataframe[plot_config["Symbol"][row]])
-            min_signal      = min(dataframe[plot_config["Symbol"][row]])
-            mean_signal     = np.mean(dataframe[plot_config["Symbol"][row]])
-            plotted_signal  = plot_config["Symbol"][row]
+            max_signal      = max(y_axis_symbol)
+            min_signal      = min(y_axis_symbol)
+            mean_signal     = np.mean(y_axis_symbol)
+            plotted_signal  = Name
             
             plot_sum.append([Name, plotted_signal, max_signal, min_signal ,mean_signal])
 
             # Table for plotted table
-            plotted_data[plot_config["Symbol"][row]] = df[plot_config["Symbol"][row]]
+            plotted_data[Name] = df[Name]
 
             plot.update_layout	(
                                 hovermode	= "x",
@@ -366,6 +374,7 @@ y_function_dict = {
 st.sidebar.markdown('''<small>v0.1</small>''', unsafe_allow_html=True)
 
 with st.sidebar.beta_expander("📝 To Do"):
+    st.write("- Add 3d plot support (Meshgrid to plot contour, 3d scatter, heatmap etc), also display as table")
     st.write("- Make .exe")
     st.write("- Add support for differnt formats (.blf, m4f)")
     st.write("- Dynamic generation of number of signals and their properties (i.e more than 5) ✔️")
@@ -510,13 +519,13 @@ if file_uploader is not None:
 if st.button("Generate"):   
     plot_config     = pd.DataFrame(trace)
     plot_config     = plot_config[plot_config["Symbol"]!='Not Selected']
-
     plot_config.reset_index(inplace=True)
+
     plot_sum            = []
 
     plotted_data        = pd.DataFrame()
     subplot             = 1
-    st.write(plot_config)
+
     generate(dataframe, plot_config)
 
 st.markdown("""---""")
