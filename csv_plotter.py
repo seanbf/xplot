@@ -9,6 +9,7 @@ from palettable.colorbrewer.qualitative import Paired_12
 from palettable.matplotlib import Inferno_20, Magma_20, Plasma_20, Viridis_20
 from palettable.tableau import Tableau_10
 from io import StringIO
+from scipy.interpolate import griddata
 
 st.set_page_config  (
                     page_title              ="CSV Plotter", 
@@ -315,14 +316,70 @@ def generate(df, plot_config):
             st.write(dataframe)
 
     if threeD == True:
+
+
         st.warning("3D plotting is under developement, there may be errors")
+        
+        Axis_X  = np.linspace( int(np.min(df[plot_config["Symbol_X"]])), int(np.max(df[plot_config["Symbol_X"]])), 10, dtype="int")
+        Axis_Y  = np.linspace( int(np.min(df[plot_config["Symbol_Y"]])), int(np.max(df[plot_config["Symbol_Y"]])), 10, dtype="int")
+        
+        Meshgrid_X_Array    = np.linspace( int(np.min(df[plot_config["Symbol_X"]]))*1.1, int(np.max(df[plot_config["Symbol_X"]]))*1.1) 
+        Meshgrid_Y_Array    = np.linspace( int(np.min(df[plot_config["Symbol_Y"]]))*1.1, int(np.max(df[plot_config["Symbol_Y"]]))*1.1)
 
-        Meshgrid_X_Array    = np.linspace(min(symbol_0), max(symbol_0), 50)
-        Meshgrid_Y_Array    = np.linspace(min(), max(), Max_Motor_Torque+1)
+        Meshgrid_X, Meshgrid_Y = np.meshgrid(Meshgrid_X_Array, Meshgrid_Y_Array)
+        
+        sym_X = plot_config["Symbol_X"][0]
+        sym_Y = plot_config["Symbol_Y"][0]
+        sym_Z = df[plot_config["Symbol_Z"][0]]
 
-        Meshgrid_X_Array, Meshgrid_Y_Array = np.meshgrid(Meshgrid_Speed_Array, Meshgrid_Torque_Array)
+        plot_3D_data    = griddata(df.loc[ :, [sym_X,sym_Y] ], sym_Z, (Meshgrid_X, Meshgrid_Y), method="linear" )
+        
+        st.write("3d data")
+        st.write(plot_3D_data)
+        st.write("axis_x")
+        st.write(Axis_X)
+        st.write("meshgrid_x")
+        st.write(Meshgrid_X)
 
+        plot_3D_z       = plot_3D_data[:, Axis_X]
+        plot_3D_z       = plot_3D_z[Axis_Y, :]
 
+        # Plot Contour of motor losses before interpolation
+        plot_3D_plot = go.Figure()
+
+        plot_3D_plot.add_trace(go.Contour  (
+                                    z           = plot_3D_z,
+                                    x           = Axis_X, 
+                                    y           = Axis_Y,
+                                    hovertemplate = 'x: %{x:.2f}' + 
+                                                    '<br>y: %{y:.2f}</br>' +
+                                                    'z: %{z:.2f}',
+                                    contours    = dict  (
+                                                        coloring    ='heatmap',
+                                                        showlabels  = True,
+                                                        labelfont   = dict  (
+                                                                            size = 10,
+                                                                            color = 'white',
+                                                                            )
+                                                        ),               
+
+                                    colorbar    = dict  (
+                                                        title       = 'Inverter Losses (W)', 
+                                                        titleside   = 'right',
+                                                        titlefont   = dict  (
+                                                                            size=12,
+                                                                            family='Arial, sans-serif'
+                                                                            )
+                                                        )
+                        )           )
+
+        plot_3D_plot.update_layout (
+                            title       = "Inverter Losses",
+                            xaxis_title = "Speed (rpm)",
+                            yaxis_title = "Torque (Nm)",
+                            template="plotly_white"
+                            )
+        st.plotly_chart(plot_3D_plot)
 # Functions
 y_function_dict = {
                 'gain':gain,
@@ -388,7 +445,7 @@ if file_uploader is not None:
         trace["Name_Y"]     = []
         trace["Name_Z"]     = []
         
-        trace["Grid_Res"] = []
+        trace["Grid_Res"]   = []
         #trace["Function"]   = []
         #trace["Value"]      = []
 
@@ -426,8 +483,6 @@ if file_uploader is not None:
         with st.sidebar.beta_expander("Z", expanded=True):
             trace["Symbol_Z"].append(st.selectbox("Symbol", symbols, key="Symbol_Z"))
             trace["Name_Z"].append(st.text_input("Rename Symbol", "", key="Name_Z"))
-        
-
 
     # 2D Trace Configuration
     else:
@@ -458,7 +513,7 @@ if file_uploader is not None:
             if color_set == 'Dark':
                 for  i in range(0,len(px.colors.qualitative.Dark24)):
                     color_palaette.append(px.colors.qualitative.Dark24[i])
-            extra_signals = st.number_input("Extra Signals", min_value=0, max_value=10, value=0, step=1, help = "Generate extra signal containers, useful if your comparing signals with functions applied")
+            extra_signals = st.number_input("Extra Signals", min_value=0, max_value=30, value=0, step=1, help = "Generate extra signal containers, useful if your comparing signals with functions applied")
         
         trace["Symbol"]     = []
         trace["Name"]       = []
@@ -584,9 +639,12 @@ if file_uploader is not None:
 if st.button("Generate"):
   
     plot_config     = pd.DataFrame(trace)
-    plot_config     = plot_config[plot_config["Symbol"]!='Not Selected']
-    plot_config.reset_index(inplace=True)
 
+    if threeD == False:
+        plot_config     = plot_config[plot_config["Symbol"]!='Not Selected']
+        plot_config.reset_index(inplace=True)
+    
+    st.write(plot_config)
     plot_sum            = []
 
     plotted_data        = pd.DataFrame()
