@@ -38,6 +38,10 @@ config = dict   ({
     'toImageButtonOptions'  :   {'format': 'svg'}
                 })
 
+colormap_config = dict({
+    'staticPlot' : True
+})
+
 # SIDEBAR BEHAVIOUR
 st.markdown(
     """
@@ -290,9 +294,8 @@ def generate(df, plot_config):
                     max_signal      = max(y_axis_symbol)
                     min_signal      = min(y_axis_symbol)
                     mean_signal     = np.mean(y_axis_symbol)
-                    plotted_signal  = Name
 
-                    plot_sum.append([Name, plotted_signal, max_signal, min_signal ,mean_signal])
+                    plot_sum.append([Name, max_signal, min_signal ,mean_signal])
 
                     # Table for plotted table
                     plotted_data[Name] = df[Name]
@@ -307,7 +310,7 @@ def generate(df, plot_config):
                 st.plotly_chart(plot, use_container_width=True, config=config)
 
                 plot_summary                = pd.DataFrame(plot_sum)
-                plot_summary.rename(columns = {0:'Name',1:'Signal',2:"Maximum",3:"Minimum",4:"Mean"}, inplace = True)
+                plot_summary.rename(columns = {0:'Signal',1:"Maximum",2:"Minimum",3:"Mean"}, inplace = True)
                 st.table(plot_summary)
 
         if checkbox_table == True:
@@ -331,7 +334,7 @@ def generate(df, plot_config):
 
         X,Y = np.meshgrid(xi,yi)
 
-        Z = griddata((x,y),z,(X,Y), method='linear') 
+        Z = griddata((x,y),z,(X,Y), fill_value=fill_value,method='linear') 
 
         plot_3D = go.Figure()
 
@@ -515,15 +518,42 @@ if file_uploader is not None:
 
         with st.sidebar.beta_expander("Plot Setup", expanded=True):
             plot_3D_type = st.selectbox("3D Type", ["Contour","3D Scatter","Surface","Heatmap"])
-
-            color_set= st.selectbox("Color Map", colors)
+            col_choice, col_show = st.beta_columns((1,2))
+            color_set= col_choice.selectbox("Color Map", colors)
+            n = 100
+            fig = go.Figure(
+                data=[go.Bar(
+                orientation="h",
+                y=[color_set] * n,
+                x=[1] * n,
+                customdata=[(x + 1) / n for x in range(n)],
+                marker=dict(color=list(range(n)), colorscale=color_set, line_width=0),
+                name=color_set,
+                
+                            )
+                ],
+                
+                layout=dict(
+                            xaxis=dict(showticklabels=False, showgrid=False, fixedrange = True),
+                            yaxis=dict(showticklabels=False, showgrid=False, fixedrange = True),
+                            height=75,
+                            width=300,
+                            margin=dict(l=0,r=0,b=0,t=25),
+                        ),
+                
+                
+                    )
+                    
+            col_show.plotly_chart(fig, config = colormap_config)
             color_palaette = color_set
             
             if plot_3D_type != '3D Scatter':
                 trace["Grid_Res"].append(st.number_input("Grid Resolution", min_value=0.0, max_value=100000.0, value=50.0, step=0.5, key="Grid_Res"))
+                fill_value = interpolation_method = st.selectbox("Fill Value", ["nan",0], help="fill missing data with the selected value")
+                interpolation_method = st.selectbox("Interpolation Method", ["linear","nearest","cubic"])
             else:
                 trace["Grid_Res"].append(0)
-
+                
         with st.sidebar.beta_expander("X", expanded=True):
             trace["Symbol_X"].append(st.selectbox("Symbol", symbols, key="Symbol_X"))
             trace["Name_X"].append(st.text_input("Rename Symbol", "", key="Name_X"))
