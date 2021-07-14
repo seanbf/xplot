@@ -1,3 +1,4 @@
+from logging import makeLogRecord
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -10,6 +11,7 @@ from palettable.matplotlib import Inferno_20, Magma_20, Plasma_20, Viridis_20
 from palettable.tableau import Tableau_10
 from io import StringIO
 from scipy.interpolate import griddata
+from traitlets.traitlets import default
 
 st.set_page_config  (
                     page_title              ="CSV Plotter", 
@@ -24,6 +26,7 @@ config = dict   ({
     'scrollZoom'            : True,
     'displayModeBar'        : True,
     'editable'              : True,
+    # Issue with streamlit/plotly :(
     #'modeBarButtonsToAdd'   :   [
     #                            'drawline',
     #                            'drawopenpath',
@@ -317,69 +320,120 @@ def generate(df, plot_config):
 
     if threeD == True:
 
+        st.warning("3D plotting is under development")
 
-        st.warning("3D plotting is under developement, there may be errors")
-        
-        Axis_X  = np.linspace( int(np.min(df[plot_config["Symbol_X"]])), int(np.max(df[plot_config["Symbol_X"]])), 10, dtype="int")
-        Axis_Y  = np.linspace( int(np.min(df[plot_config["Symbol_Y"]])), int(np.max(df[plot_config["Symbol_Y"]])), 10, dtype="int")
-        
-        Meshgrid_X_Array    = np.linspace( int(np.min(df[plot_config["Symbol_X"]]))*1.1, int(np.max(df[plot_config["Symbol_X"]]))*1.1) 
-        Meshgrid_Y_Array    = np.linspace( int(np.min(df[plot_config["Symbol_Y"]]))*1.1, int(np.max(df[plot_config["Symbol_Y"]]))*1.1)
+        x = df[plot_config["Symbol_X"][0]]
+        y = df[plot_config["Symbol_Y"][0]]
+        z = df[plot_config["Symbol_Z"][0]]
 
-        Meshgrid_X, Meshgrid_Y = np.meshgrid(Meshgrid_X_Array, Meshgrid_Y_Array)
-        
-        sym_X = plot_config["Symbol_X"][0]
-        sym_Y = plot_config["Symbol_Y"][0]
-        sym_Z = df[plot_config["Symbol_Z"][0]]
+        xi = np.linspace( min(x)*1.1, max(x)*1.1, int(trace["Grid_Res"][0])) 
+        yi = np.linspace( min(y)*1.1, max(y)*1.1, int(trace["Grid_Res"][0]))
 
-        plot_3D_data    = griddata(df.loc[ :, [sym_X,sym_Y] ], sym_Z, (Meshgrid_X, Meshgrid_Y), method="linear" )
-        
-        st.write("3d data")
-        st.write(plot_3D_data)
-        st.write("axis_x")
-        st.write(Axis_X)
-        st.write("meshgrid_x")
-        st.write(Meshgrid_X)
+        X,Y = np.meshgrid(xi,yi)
 
-        plot_3D_z       = plot_3D_data[:, Axis_X]
-        plot_3D_z       = plot_3D_z[Axis_Y, :]
+        Z = griddata((x,y),z,(X,Y), method='linear') 
 
-        # Plot Contour of motor losses before interpolation
-        plot_3D_plot = go.Figure()
+        plot_3D = go.Figure()
 
-        plot_3D_plot.add_trace(go.Contour  (
-                                    z           = plot_3D_z,
-                                    x           = Axis_X, 
-                                    y           = Axis_Y,
-                                    hovertemplate = 'x: %{x:.2f}' + 
-                                                    '<br>y: %{y:.2f}</br>' +
-                                                    'z: %{z:.2f}',
-                                    contours    = dict  (
-                                                        coloring    ='heatmap',
-                                                        showlabels  = True,
-                                                        labelfont   = dict  (
-                                                                            size = 10,
-                                                                            color = 'white',
-                                                                            )
-                                                        ),               
+        if plot_3D_type == 'Contour':
+            plot_3D.add_trace(go.Contour  (
+                                z           = Z,
+                                x           = xi, 
+                                y           = yi,
+                                colorscale  = color_palaette,
+                                hovertemplate = str(plot_config["Symbol_X"][0]) + ': %{x:.2f}' + 
+                                                '<br>' + str(plot_config["Symbol_Y"][0])+ ': %{y:.2f}</br>' +
+                                                str(plot_config["Symbol_Z"][0]) + ': %{z:.2f}',
+                                contours    = dict  (
+                                                    coloring    ='heatmap',
+                                                    showlabels  = True,
+                                                    labelfont   = dict  (
+                                                                        size = 10,
+                                                                        color = 'white',
+                                                                        )
+                                                    ), 
 
-                                    colorbar    = dict  (
-                                                        title       = 'Inverter Losses (W)', 
-                                                        titleside   = 'right',
-                                                        titlefont   = dict  (
-                                                                            size=12,
-                                                                            family='Arial, sans-serif'
-                                                                            )
-                                                        )
-                        )           )
+                                colorbar    = dict  (
+                                                    title       = str(plot_config["Symbol_Z"][0]),
+                                                    titleside   = 'right',
+                                                    titlefont   = dict  (
+                                                                        size=12,
+                                                                        family='Arial, sans'
+                                                                        )
+                                                    )
+                    )           )
 
-        plot_3D_plot.update_layout (
-                            title       = "Inverter Losses",
-                            xaxis_title = "Speed (rpm)",
-                            yaxis_title = "Torque (Nm)",
-                            template="plotly_white"
-                            )
-        st.plotly_chart(plot_3D_plot)
+        if plot_3D_type == '3D Scatter':
+            plot_3D.add_trace(go.Scatter3d  (
+                                z           = z,
+                                x           = x, 
+                                y           = y,
+                                mode        = 'markers',
+                                marker      = dict(
+                                            color = z,
+                                            colorscale  = color_palaette,
+                                            opacity = 0.7
+                                                    ),
+                                            
+                                hovertemplate = str(plot_config["Symbol_X"][0]) + ': %{x:.2f}' + 
+                                                '<br>' + str(plot_config["Symbol_Y"][0])+ ': %{y:.2f}</br>' +
+                                                str(plot_config["Symbol_Z"][0]) + ': %{z:.2f}',               
+
+                                )           )
+
+        if plot_3D_type == 'Surface':
+                        plot_3D.add_trace(go.Surface  (
+                                z           = Z,
+                                x           = xi, 
+                                y           = yi,
+                                colorscale  = color_palaette,
+                                            
+                                hovertemplate = str(plot_config["Symbol_X"][0]) + ': %{x:.2f}' + 
+                                                '<br>' + str(plot_config["Symbol_Y"][0])+ ': %{y:.2f}</br>' +
+                                                str(plot_config["Symbol_Z"][0]) + ': %{z:.2f}',               
+                                colorbar    = dict  (
+                                                    title       = str(plot_config["Symbol_Z"][0]),
+                                                    titleside   = 'right',
+                                                    titlefont   = dict  (
+                                                                        size=12,
+                                                                        family='Arial, sans'
+                                                                        )
+                                                    )
+                                )           )
+        if plot_3D_type == 'Heatmap':
+                        plot_3D.add_trace(go.Heatmap  (
+                                z           = Z,
+                                x           = xi, 
+                                y           = yi,
+                                
+                                colorscale  = color_palaette,
+                                            
+                                hovertemplate = str(plot_config["Symbol_X"][0]) + ': %{x:.2f}' + 
+                                                '<br>' + str(plot_config["Symbol_Y"][0])+ ': %{y:.2f}</br>' +
+                                                str(plot_config["Symbol_Z"][0]) + ': %{z:.2f}', 
+
+                                colorbar    = dict  (
+                                                    title       = str(plot_config["Symbol_Z"][0]),
+                                                    titleside   = 'right',
+                                                    titlefont   = dict  (
+                                                                        size=12,
+                                                                        family='Arial, sans'
+                                                                        )
+                                                    )
+                                )           )
+                                
+        plot_3D.update_layout	(
+                    autosize    = True,
+                    height      = 720,
+                    width       = 1080,
+                    title       = plot_3D_type ,
+                    xaxis       = dict(title=str(plot_config["Symbol_X"][0])),
+                    yaxis       = dict(title=str(plot_config["Symbol_Y"][0]))
+                    
+                    )
+
+        st.plotly_chart(plot_3D)
+
 # Functions
 y_function_dict = {
                 'gain':gain,
@@ -395,7 +449,7 @@ y_function_dict = {
 st.sidebar.markdown('''<small>v0.1</small>''', unsafe_allow_html=True)
 
 with st.sidebar.beta_expander("📝 To Do"):
-    st.write("- Add 3d plot support (Meshgrid to plot contour, 3d scatter, heatmap etc), also display as table")
+    st.write("- Add 3d plot support (Meshgrid to plot contour, 3d scatter, heatmap etc), also display as table ✔️")
     st.write("- Make .exe")
     st.write("- Add support for differnt formats (.blf, m4f)")
     st.write("- Dynamic generation of number of signals and their properties (i.e more than 5) ✔️")
@@ -446,32 +500,30 @@ if file_uploader is not None:
         trace["Name_Z"]     = []
         
         trace["Grid_Res"]   = []
-        #trace["Function"]   = []
-        #trace["Value"]      = []
+        #trace["Function"]  = []
+        #trace["Value"]     = []
 
         y_axis_spec         = []
         trace_function      = []
         signal_functions    = []
 
-        st.warning("3d plotting under development")
+        colors = px.colors.named_colorscales()
+
+        mylist = colors
+        myorder = [21,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93]
+        colors = [colors[i] for i in myorder]
+
         with st.sidebar.beta_expander("Plot Setup", expanded=True):
-            color_set = st.selectbox("Color Palette", ['Inferno','Magma','Plasma','Viridis'], key='color_set',help = "Recommended: Light Theme use Plotly, Dark Theme use Pastel" )
-            color_palaette = []
+            plot_3D_type = st.selectbox("3D Type", ["Contour","3D Scatter","Surface","Heatmap"])
 
-            if color_set == 'Inferno':
-                color_palaette = Inferno_20
+            color_set= st.selectbox("Color Map", colors)
+            color_palaette = color_set
+            
+            if plot_3D_type != '3D Scatter':
+                trace["Grid_Res"].append(st.number_input("Grid Resolution", min_value=0.0, max_value=100000.0, value=50.0, step=0.5, key="Grid_Res"))
+            else:
+                trace["Grid_Res"].append(0)
 
-            if color_set == 'Magma':
-                color_palaette = Magma_20
-
-            if color_set == 'Plasma':
-                color_palaette = Plasma_20
-
-            if color_set == 'Viridis':
-                color_palaette = Viridis_20
-
-            trace["Grid_Res"].append(st.number_input("Grid Resolution", min_value=0.0, max_value=100000.0, value=10.0, step=0.5, key="Grid_Res"))
-        
         with st.sidebar.beta_expander("X", expanded=True):
             trace["Symbol_X"].append(st.selectbox("Symbol", symbols, key="Symbol_X"))
             trace["Name_X"].append(st.text_input("Rename Symbol", "", key="Name_X"))
@@ -644,7 +696,6 @@ if st.button("Generate"):
         plot_config     = plot_config[plot_config["Symbol"]!='Not Selected']
         plot_config.reset_index(inplace=True)
     
-    st.write(plot_config)
     plot_sum            = []
 
     plotted_data        = pd.DataFrame()
