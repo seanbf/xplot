@@ -47,11 +47,11 @@ st.markdown(
     """
     <style>
     [data-testid="stSidebar"][aria-expanded="true"] > div:first-child {
-        width: 600px;
+        width: 650px;
     }
     [data-testid="stSidebar"][aria-expanded="false"] > div:first-child {
-        width: 600px;
-        margin-left: -600px;
+        width: 650px;
+        margin-left: -650px;
     }
     </style>
     """,
