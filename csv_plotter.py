@@ -208,6 +208,7 @@ def generate(df, plot_config):
                     Function_Value_String         = ''
 
                     if plot_config["Function"][row] != 'Not Selected':
+                        
                         for j in range(0, len(plot_config["Function"][row])):
 
                             if plot_config["Value"][row][j] != "None":
@@ -233,8 +234,10 @@ def generate(df, plot_config):
 
                         df[Name] = temp_col
                         y_axis_symbol = df[Name]
+                        plotted_data[Name] = y_axis_symbol
                     else:
                         y_axis_symbol = df[plot_config["Symbol"][row]]
+                        plotted_data[Name] = y_axis_symbol
 
                     # Plot type
                     if plot_config["Chart_type"][row] == 'lines':
@@ -298,7 +301,7 @@ def generate(df, plot_config):
                     plot_sum.append([Name, max_signal, min_signal ,mean_signal])
 
                     # Table for plotted table
-                    plotted_data[Name] = df[Name]
+                    
 
                     plot.update_layout	(
                                         hovermode	= "x",
@@ -329,8 +332,8 @@ def generate(df, plot_config):
         y = df[plot_config["Symbol_Y"][0]]
         z = df[plot_config["Symbol_Z"][0]]
 
-        xi = np.linspace( min(x)*1.1, max(x)*1.1, int(trace["Grid_Res"][0])) 
-        yi = np.linspace( min(y)*1.1, max(y)*1.1, int(trace["Grid_Res"][0]))
+        xi = np.linspace( float(min(x)), float(max(x)), int(trace["Grid_Res"][0])) 
+        yi = np.linspace( float(min(y)), float(max(y)), int(trace["Grid_Res"][0]))
 
         X,Y = np.meshgrid(xi,yi)
 
@@ -534,13 +537,14 @@ if file_uploader is not None:
                 ],
                 
                 layout=dict(
-                            xaxis=dict(showticklabels=False, showgrid=False, fixedrange = True),
-                            yaxis=dict(showticklabels=False, showgrid=False, fixedrange = True),
-                            height=75,
-                            width=300,
+                            xaxis=dict(showticklabels=False, showgrid=False, fixedrange = True, visible=False),
+                            yaxis=dict(showticklabels=False, showgrid=False, fixedrange = True, visible=False),
+                            height=85,
+                            width=340,
                             margin=dict(l=0,r=0,b=0,t=25),
+                            paper_bgcolor='rgba(0,0,0,0)',
+                            plot_bgcolor='rgba(0,0,0,0)'
                         ),
-                
                 
                     )
                     
@@ -569,7 +573,10 @@ if file_uploader is not None:
     # 2D Trace Configuration
     else:
         with st.sidebar.beta_expander("Plot Setup", expanded=True):
-            color_set = st.selectbox("Color Palette", ['Default','Pastel','Paired','MS Office','Light','Dark'], key='color_set',help = "Recommended: Light Theme use Plotly, Dark Theme use Pastel" )
+            
+            col_choice, col_show = st.beta_columns((1,2))
+            
+            color_set = col_choice.selectbox("Color Palette", ['Default','Pastel','Paired','MS Office','Light','Dark'], key='color_set',help = "Recommended: Light Theme use Plotly, Dark Theme use Pastel" )
             color_palaette = []
 
             if color_set == 'Default':
@@ -595,8 +602,37 @@ if file_uploader is not None:
             if color_set == 'Dark':
                 for  i in range(0,len(px.colors.qualitative.Dark24)):
                     color_palaette.append(px.colors.qualitative.Dark24[i])
+            
             extra_signals = st.number_input("Extra Signals", min_value=0, max_value=30, value=0, step=1, help = "Generate extra signal containers, useful if your comparing signals with functions applied")
-        
+            
+            n = len(color_palaette)
+            fig = go.Figure(
+                data=[go.Bar(
+                orientation="v",
+                x=[color_palaette] * n,
+                y=[1] * n,
+                customdata=[(x + 1) / n for x in range(n)],
+                marker=dict(color=list(range(n)), colorscale=color_palaette, line_width=0),
+                name=color_set,
+                
+                            )
+                ],
+                
+                layout=dict(
+                            xaxis=dict(showticklabels=False, showgrid=False, fixedrange = True, visible=False),
+                            yaxis=dict(showticklabels=False, showgrid=False, fixedrange = True, visible=False),
+                            height=80,
+                            width=340,
+                            margin=dict(l=0,r=0,b=0,t=30),
+                            paper_bgcolor='rgba(0,0,0,0)',
+                            plot_bgcolor='rgba(0,0,0,0)'
+                        ),
+                
+                
+                    )
+
+            col_show.plotly_chart(fig, config = colormap_config)
+
         trace["Symbol"]     = []
         trace["Name"]       = []
         trace["Hex_rep"]    = []
@@ -620,7 +656,7 @@ if file_uploader is not None:
             function_0  = st.multiselect('Functions', ['time2frequency','gain'], key="function_0" )
 
         total_signals = 6
-        color_counter = 0
+        color_counter = -1
 
         if extra_signals > 0:
             total_signals = total_signals + extra_signals
