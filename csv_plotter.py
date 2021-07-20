@@ -332,12 +332,14 @@ def generate(df, plot_config):
         y = df[plot_config["Symbol_Y"][0]]
         z = df[plot_config["Symbol_Z"][0]]
 
-        xi = np.linspace( float(min(x)), float(max(x)), int(trace["Grid_Res"][0])) 
-        yi = np.linspace( float(min(y)), float(max(y)), int(trace["Grid_Res"][0]))
-
-        X,Y = np.meshgrid(xi,yi)
-
-        Z = griddata((x,y),z,(X,Y), fill_value=fill_value,method='linear') 
+        if plot_3D_type != '3D Scatter':
+    
+            xi = np.linspace( float(min(x)), float(max(x)), int(trace["Grid_Res"][0])) 
+            yi = np.linspace( float(min(y)), float(max(y)), int(trace["Grid_Res"][0]))
+    
+            X,Y = np.meshgrid(xi,yi)
+    
+            Z = griddata((x,y),z,(X,Y), fill_value=fill_value,method='linear') 
 
         plot_3D = go.Figure()
 
