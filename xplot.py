@@ -1,26 +1,23 @@
 import streamlit as st
 import pandas as pd
 
-from src.colors import qualitive_color_dict, plot_color_set 
 from src.functions import y_functions_dict
 from src.layout import plotly_toolbar_config, view_2d_or_3d, plot_config_3d, plot_config_2d,  signal_container_3d
-from src.plotter import plot_2D
+from src.plotter import plot_2D, plot_3D
 from src.plot_setup import get_markers
-from src.utils import load_dataframe
+from src.utils import load_dataframe, plotted_analysis_simple
 
 page_config = st.set_page_config  (
                 page_title              ="xPlot", 
                 page_icon               ="📈", 
                 layout                  ='wide', 
                 initial_sidebar_state   ='auto'
-                
                 )
 # Main Page
 st.sidebar.title('xPlot')
 st.sidebar.markdown('''<small>v0.1</small>''', unsafe_allow_html=True)
 
 toolbar                         = plotly_toolbar_config()
-
 y_functions                     = y_functions_dict()
 y_function_names                = list(y_functions.keys())
 
@@ -46,14 +43,9 @@ radio_2d_3d         = st.sidebar.radio('', ['2D Plot','3D Plot'], key="2Dor3D")
 trace = view_2d_or_3d(radio_2d_3d)
 
 if radio_2d_3d == '3D Plot':
-    plot_3D_type, color_palette, fill_value, interpolation_method, trace["Grid_Res"] = plot_config_3d(radio_2d_3d,trace)
+    trace["Chart_Type"], trace["Fill_Value"], trace["Interp_Method"], trace["Grid_Res"], color_palette  = plot_config_3d(radio_2d_3d, trace)
 else:
     color_palette, extra_signals  = plot_config_2d(radio_2d_3d)
-
-checkbox_table          = st.checkbox('Display plotted data as table',value = False)
-checkbox_raw_table      = st.checkbox('Display all data as table')
-
-
    
 uploaded_file = st.sidebar.file_uploader(label="",
                                                  accept_multiple_files=False,
@@ -77,6 +69,7 @@ elif uploaded_file is not None:
     
     # 3D Trace Configuration
     if radio_2d_3d == '3D Plot':
+        
         trace["Symbol_X"], trace["Symbol_Y"], trace["Symbol_Z"], trace["Name_X"], trace["Name_Y"], trace["Name_Z"] = signal_container_3d(trace, symbols)
         
     # 2D Trace Configuration
@@ -129,12 +122,12 @@ elif uploaded_file is not None:
 
                 ## Formatting
                 col_type, col_style, col_size  = st.beta_columns(3)
-                trace["Chart_type"].append(col_type.radio('Type', ['lines','markers','lines+markers'], key="type_"+str(available_symbols) ))
-                if  trace["Chart_type"][available_symbols-1] == 'lines':
+                trace["Chart_Type"].append(col_type.radio('Type', ['lines','markers','lines+markers'], key="type_"+str(available_symbols) ))
+                if  trace["Chart_Type"][available_symbols-1] == 'lines':
                     trace["Style"].append(col_style.selectbox("Style",  ["solid", "dot", "dash", "longdash", "dashdot","longdashdot"], key="style_"+str(available_symbols)))
-                if  trace["Chart_type"][available_symbols-1] == 'markers':
+                if  trace["Chart_Type"][available_symbols-1] == 'markers':
                     trace["Style"].append(col_style.selectbox("Style", marker_names, help="https://plotly.com/python/marker-style/", key="style_"+str(available_symbols)))
-                if  trace["Chart_type"][available_symbols-1] == 'lines+markers':
+                if  trace["Chart_Type"][available_symbols-1] == 'lines+markers':
                     trace["Style"].append(col_style.selectbox("Style", marker_names, help="https://plotly.com/python/marker-style/", key="style_"+str(available_symbols)))
                
                 trace["Size"].append(col_size.number_input("Size", min_value=0.0, max_value=10.0, value=2.0, step=0.5, key="size_"+str(available_symbols)))
@@ -197,12 +190,17 @@ plot_sum            = []
 
 # Generate
 if st.button("Plot"):
-  
-    plot_config     = pd.DataFrame(trace)
 
+    plot_config     = pd.DataFrame(trace)
+    
     if radio_2d_3d == '2D Plot':
         plot_config     = plot_config[plot_config["Symbol"]!='Not Selected']
         plot_config.reset_index(inplace=True)
+        plot = plot_2D(dataframe, plot_config, plotted_data, symbol_0)
+    else:
+        plot = plot_3D(dataframe, plot_config, color_palette)
     
-    plot = plot_2D(dataframe, plot_config, plotted_data, symbol_0)
     st.plotly_chart(plot, use_container_width=True, config=toolbar)
+
+if st.button ("Display all raw data"):
+    st.write(dataframe)
