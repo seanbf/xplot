@@ -111,7 +111,7 @@ def sequential_color_dict():
                         })          
     return color_dict
 
-
+@st.cache
 def plot_color_set(color_palaette, color_set, is_three_d):
     """
     Plot color pallete as Bar chart for previewing.

@@ -147,7 +147,6 @@ def get_subplot(Subplot):
 #            y_axis_symbol = df[plot_config["Symbol"][row]]
 #            plotted_data[Name] = y_axis_symbol
 
-@st.cache
 def plot_2D(df, plot_config, plotted_data, symbol_0):
 
     y_axis_config = get_y_axis_config(plot_config)
@@ -281,14 +280,14 @@ def plot_2D(df, plot_config, plotted_data, symbol_0):
     #plot_summary                = pd.DataFrame(plot_sum)
     #plot_summary.rename(columns = {0:'Signal',1:"Maximum",2:"Minimum",3:"Mean"}, inplace = True)
 
-    #sum_col_left, sum_col_right = st.beta_columns((2,1))
+    #sum_col_left, sum_col_right = st.columns((2,1))
     #sum_col_left.table(plot_summary)
     #sum_col_right.selectbox(label='Select download plot format', options=['.png', '.jpeg', '.pdf', '.svg', '.html', '.json'])
     #sum_col_right.button(label='Download Plot')
     #sum_col_right.selectbox(label='Export plot data format', options=['.csv', '.txt', '.pdf', '.html'])
     #sum_col_right.button(label='Export Data')
 
-
+@st.cache
 def plot_3D(df, plot_config, color_palette):
 
         x = df[plot_config["Symbol_X"][0]]

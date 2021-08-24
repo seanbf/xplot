@@ -9,18 +9,19 @@ def trace_dict(toggle):
     trace =  dict()
 
     if toggle == "2D Plot":
-        trace["Symbol"]     = []
-        trace["Name"]       = []
-        trace["Hex_rep"]    = []
-        trace["Bin_rep"]    = []
-        trace["Plot_row"]   = []
-        trace["Axis"]       = []
-        trace["Color"]      = []
-        trace["Size"]       = []
-        trace["Style"]      = []
-        trace["Chart_Type"] = []
-        trace["Function"]   = []
-        trace["Value"]      = []
+        trace["Symbol"]         = []
+        trace["Name"]           = []
+        trace["Hex_rep"]        = []
+        trace["Bin_rep"]        = []
+        trace["Plot_row"]       = []
+        trace["Axis"]           = []
+        trace["Color"]          = []
+        trace["Size"]           = []
+        trace["Style"]          = []
+        trace["Chart_Type"]     = []
+        trace["Function"]       = []
+        trace["Value"]          = []
+        trace["Extra_Signals"]  = 0
 
     elif toggle == "3D Plot":
         trace["Symbol_X"]       = []
@@ -80,7 +81,6 @@ def get_name(renamed_name,symbol_name):
         Name = renamed_name
     return Name
 
-@st.cache
 def get_y_axis(y_axis):
     ''' 
     Get name of signal or new name, input by user.
