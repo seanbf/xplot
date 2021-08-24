@@ -12,8 +12,10 @@ import plotly.graph_objects as go
 
 @st.cache
 def qualitive_color_dict():
-    """Qualitive Color Dictionary
     """
+    Qualitive Color Dictionary
+    """
+
     color_dict    =      dict({
                         'Tableau'           :Tableau_10.hex_colors, 
                         'Tableau Paired'    :Tableau_20.hex_colors, 
@@ -47,8 +49,10 @@ def qualitive_color_dict():
 
 @st.cache
 def diverging_color_dict():
-    """Diverging Color Dictionary
     """
+    Diverging Color Dictionary
+    """
+
     color_dict    =      dict({
                         'Berlin'            :Berlin_20.hex_colors, 
                         'Broc'              :Broc_20.hex_colors, 
@@ -78,8 +82,10 @@ def diverging_color_dict():
 
 @st.cache
 def sequential_color_dict():
-    """Sequential_color_set Color Dictionary
     """
+    Sequential_color_set Color Dictionary
+    """
+
     color_dict    =      dict({
                         'Viridis'               :Viridis_20.hex_colors, 
                         'Inferno'               :Inferno_20.hex_colors, 
@@ -105,16 +111,19 @@ def sequential_color_dict():
                         })          
     return color_dict
 
-@st.cache
-def plot_color_set(color_palaette, color_set, is_three_d):
-    """Plot color pallete as Bar chart for previewing.
-    """
-    if is_three_d == True:
-        width           = 575
-    else:
-        width           = 340
 
+def plot_color_set(color_palaette, color_set, is_three_d):
+    """
+    Plot color pallete as Bar chart for previewing.
+    """
+    
+    if is_three_d == True:
+        width           = 300
+    else:
+        width           = 800
+    
     n = len(color_palaette)
+    st.write(width)
     fig = go.Figure (
                     data =  [go.Bar     (
                                         orientation = "v",
@@ -126,11 +135,11 @@ def plot_color_set(color_palaette, color_set, is_three_d):
                                         )
                             ],
                     layout = dict   (
-                                    xaxis           = dict(showticklabels=False, showgrid=False, fixedrange = True, visible=False),
-                                    yaxis           = dict(showticklabels=False, showgrid=False, fixedrange = True, visible=False),
-                                    height          = 85,
+                                    xaxis           = dict(showticklabels=False, showgrid=False, fixedrange = False, visible=False),
+                                    yaxis           = dict(showticklabels=False, showgrid=False, fixedrange = False, visible=False),
+                                    height          = 80    ,
                                     width           = width,
-                                    margin          = dict(l=0,r=0,b=0,t=25),
+                                    margin          = dict(l=0,r=0,b=0,t=29),
                                     paper_bgcolor   = 'rgba(0,0,0,0)',
                                     plot_bgcolor    = 'rgba(0,0,0,0)'
                                     ),
