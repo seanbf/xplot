@@ -117,13 +117,8 @@ def plot_color_set(color_palaette, color_set, is_three_d):
     Plot color pallete as Bar chart for previewing.
     """
     
-    if is_three_d == True:
-        width           = 300
-    else:
-        width           = 800
-    
     n = len(color_palaette)
-    st.write(width)
+    
     fig = go.Figure (
                     data =  [go.Bar     (
                                         orientation = "v",
@@ -138,7 +133,7 @@ def plot_color_set(color_palaette, color_set, is_three_d):
                                     xaxis           = dict(showticklabels=False, showgrid=False, fixedrange = False, visible=False),
                                     yaxis           = dict(showticklabels=False, showgrid=False, fixedrange = False, visible=False),
                                     height          = 80    ,
-                                    width           = width,
+                                    width           = 100,
                                     margin          = dict(l=0,r=0,b=0,t=29),
                                     paper_bgcolor   = 'rgba(0,0,0,0)',
                                     plot_bgcolor    = 'rgba(0,0,0,0)'

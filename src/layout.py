@@ -42,9 +42,9 @@ def plot_config_3d(radio_2d_3d, trace):
 
     if radio_2d_3d == "3D Plot":
         with st.beta_expander("3D Plot Configuration", expanded=True):
-            col_plot_type, col_col_type, col_choice, col_preview, col_grid_res, col_fill, col_interp = st.beta_columns(7)
+            col_plot_type, col_grid_res, col_fill, col_interp, col_col_type, col_choice, col_preview = st.beta_columns(7)
 
-            plot_3D_type = col_plot_type.selectbox("Plot Type", ["Contour","3D Scatter","Surface","Heatmap"])
+            trace["Chart_Type"] = col_plot_type.selectbox("Plot Type", ["Contour","3D Scatter","Surface","Heatmap"])
             color_set_type = col_col_type.selectbox('Color Map Type', ['Sequential','Diverging'], key="coltype")
 
         if color_set_type == 'Sequential':
@@ -59,29 +59,28 @@ def plot_config_3d(radio_2d_3d, trace):
             color_palette = diverging_color_dict().get(color_set)
 
         col_preview.plotly_chart(plot_color_set(color_palette, color_set, radio_2d_3d), config = dict({'staticPlot' : True}))
-        if plot_3D_type != '3D Scatter':
-            grid_res = col_grid_res.number_input("Grid Resolution", min_value=0.0, max_value=100000.0, value=50.0, step=0.5, key="Grid_Res")
-            fill_value = col_fill.selectbox("Fill Value", ["nan",0], help="fill missing data with the selected value")
-            interpolation_method = col_interp.selectbox("Interpolation Method", ["linear","nearest","cubic"])
-            trace["Grid_Res"].append(grid_res)
+        if trace["Chart_Type"] != '3D Scatter':
+            trace["Grid_Res"] = col_grid_res.number_input("Grid Resolution", min_value=0.0, max_value=100000.0, value=50.0, step=0.5, key="Grid_Res")
+            trace["Fill_Value"] = col_fill.selectbox("Fill Value", ["nan",0], help="fill missing data with the selected value")
+            trace["Interp_Method"] = col_interp.selectbox("Interpolation Method", ["linear","nearest","cubic"])
+            
         else:
-            trace["Grid_Res"].append(0)
-            fill_value = None
-            interpolation_method = None
+            trace["Fill_Value"] = None
+            trace["Interp_Method"] = None
             trace["Grid_Res"] = None
 
     else:
-        plot_3D_type = None
+        trace["Chart_Type"] = None
         color_palette = None
-        fill_value = None
-        interpolation_method = None
+        trace["Fill_Value"] = None
+        trace["Interp_Method"] = None
         trace["Grid_Res"] = None
 
-    return plot_3D_type, color_palette, fill_value, interpolation_method, trace["Grid_Res"]
+    return trace["Chart_Type"], trace["Fill_Value"], trace["Interp_Method"], trace["Grid_Res"], color_palette
 
 def plot_config_2d(radio_2d_3d):
     with st.beta_expander("2D Plot Configuration", expanded=True):
-        col_choice, col_show, col_extra_signals = st.beta_columns((1,2,1))
+        col_choice, col_extra_signals, col_show = st.beta_columns((1,1,3))
         qualitive_color_sets_dict       = qualitive_color_dict()
         qualitive_color_sets_names      = list(qualitive_color_sets_dict.keys())
         color_set = col_choice.selectbox("Color Palette",qualitive_color_sets_names, key='color_set', help = "Recommended: Light Theme use Plotly, Dark Theme use Pastel" )
@@ -98,7 +97,7 @@ def signal_container_3d(trace, symbols):
     '''
     Generate containers for 3d plot.
     '''
-
+    
     with st.sidebar.beta_expander("X", expanded=True):
         trace["Symbol_X"].append(st.selectbox("Symbol", symbols, key="Symbol_X"))
         trace["Name_X"].append(st.text_input("Rename Symbol", "", key="Name_X"))
@@ -159,12 +158,12 @@ def signal_container_2d():
 
             ## Formatting
             col_type, col_style, col_size  = st.beta_columns(3)
-            trace["Chart_type"].append(col_type.radio('Type', ['lines','markers','lines+markers'], key="type_"+str(available_symbols) ))
-            if  trace["Chart_type"][available_symbols-1] == 'lines':
+            trace["Chart_Type"].append(col_type.radio('Type', ['lines','markers','lines+markers'], key="type_"+str(available_symbols) ))
+            if  trace["Chart_Type"][available_symbols-1] == 'lines':
                 trace["Style"].append(col_style.selectbox("Style",  ["solid", "dot", "dash", "longdash", "dashdot","longdashdot"], key="style_"+str(available_symbols)))
-            if  trace["Chart_type"][available_symbols-1] == 'markers':
+            if  trace["Chart_Type"][available_symbols-1] == 'markers':
                 trace["Style"].append(col_style.selectbox("Style", marker_names, help="https://plotly.com/python/marker-style/", key="style_"+str(available_symbols)))
-            if  trace["Chart_type"][available_symbols-1] == 'lines+markers':
+            if  trace["Chart_Type"][available_symbols-1] == 'lines+markers':
                 trace["Style"].append(col_style.selectbox("Style", marker_names, help="https://plotly.com/python/marker-style/", key="style_"+str(available_symbols)))
            
             trace["Size"].append(col_size.number_input("Size", min_value=0.0, max_value=10.0, value=2.0, step=0.5, key="size_"+str(available_symbols)))

@@ -8,18 +8,6 @@ from plotly.subplots import make_subplots
 from src.functions import y_functions_dict
 
 @st.cache
-def get_markers(marker_values):
-    raw_symbols = SymbolValidator().values
-    namestems = []
-
-    for i in range(0,len(raw_symbols),3):
-        name = raw_symbols[i+2]
-        namestems.append(name)
-
-    marker_names = namestems
-    return marker_names
-
-@st.cache
 def get_hovertip(Hex, Bin):
     ''' 
     Show hex / bin on plot
@@ -225,7 +213,7 @@ def plot_2D(df, plot_config, plotted_data, symbol_0):
             plotted_data[Name] = y_axis_symbol
 
         # Plot type
-        if plot_config["Chart_type"][row] == 'lines':
+        if plot_config["Chart_Type"][row] == 'lines':
                 plot.add_trace	(go.Scatter (  
                                     x       		= df[symbol_0],
                                     y       		= y_axis_symbol,
@@ -243,7 +231,7 @@ def plot_2D(df, plot_config, plotted_data, symbol_0):
                                 secondary_y         = y_axis_plot
                                 )
 
-        elif plot_config["Chart_type"][row] == 'markers':
+        elif plot_config["Chart_Type"][row] == 'markers':
                 plot.add_trace	(go.Scatter (  
                                     x       		= df[symbol_0],
                                     y       		= y_axis_symbol,
@@ -260,7 +248,7 @@ def plot_2D(df, plot_config, plotted_data, symbol_0):
                                     col             = 1,
                                     secondary_y     = y_axis_plot          
                                 )
-        elif plot_config["Chart_type"][row] == 'lines+markers':
+        elif plot_config["Chart_Type"][row] == 'lines+markers':
                 plot.add_trace	(go.Scatter (  
                                     x       		= df[symbol_0],
                                     y       		= y_axis_symbol,
@@ -279,13 +267,6 @@ def plot_2D(df, plot_config, plotted_data, symbol_0):
                                 )
         else:
             st.warning("Chart_Type Failure")
-
-        # Summary table
-        max_signal      = max(y_axis_symbol)
-        min_signal      = min(y_axis_symbol)
-        mean_signal     = np.mean(y_axis_symbol)
-
-        #plot_sum.append([Name, max_signal, min_signal ,mean_signal])
         
         plot.update_layout	(
                             hovermode	= "x",  
@@ -299,7 +280,7 @@ def plot_2D(df, plot_config, plotted_data, symbol_0):
 
     #plot_summary                = pd.DataFrame(plot_sum)
     #plot_summary.rename(columns = {0:'Signal',1:"Maximum",2:"Minimum",3:"Mean"}, inplace = True)
-#
+
     #sum_col_left, sum_col_right = st.beta_columns((2,1))
     #sum_col_left.table(plot_summary)
     #sum_col_right.selectbox(label='Select download plot format', options=['.png', '.jpeg', '.pdf', '.svg', '.html', '.json'])
@@ -308,120 +289,118 @@ def plot_2D(df, plot_config, plotted_data, symbol_0):
     #sum_col_right.button(label='Export Data')
 
 
-#def plot_3D(df, plot_config):
-#
-#        st.warning("3D plotting is under development")
-#
-#        x = df[plot_config["Symbol_X"][0]]
-#        y = df[plot_config["Symbol_Y"][0]]
-#        z = df[plot_config["Symbol_Z"][0]]
-#
-#        if plot_3D_type != '3D Scatter':
-#    
-#            xi = np.linspace( float(min(x)), float(max(x)), int(trace["Grid_Res"][0])) 
-#            yi = np.linspace( float(min(y)), float(max(y)), int(trace["Grid_Res"][0]))
-#    
-#            X,Y = np.meshgrid(xi,yi)
-#    
-#            Z = griddata((x,y),z,(X,Y), fill_value=fill_value,method='linear') 
-#
-#        plot_3D = go.Figure()
-#
-#        if plot_3D_type == 'Contour':
-#            plot_3D.add_trace(go.Contour  (
-#                                z           = Z,
-#                                x           = xi, 
-#                                y           = yi,
-#                                colorscale  = color_palette,
-#                                hovertemplate = str(plot_config["Symbol_X"][0]) + ': %{x:.2f}' + 
-#                                                '<br>' + str(plot_config["Symbol_Y"][0])+ ': %{y:.2f}</br>' +
-#                                                str(plot_config["Symbol_Z"][0]) + ': %{z:.2f}',
-#                                contours    = dict  (
-#                                                    coloring    ='heatmap',
-#                                                    showlabels  = True,
-#                                                    labelfont   = dict  (
-#                                                                        size = 10,
-#                                                                        color = 'white',
-#                                                                        )
-#                                                    ), 
-#
-#                                colorbar    = dict  (
-#                                                    title       = str(plot_config["Symbol_Z"][0]),
-#                                                    titleside   = 'right',
-#                                                    titlefont   = dict  (
-#                                                                        size=12,
-#                                                                        family='Arial, sans'
-#                                                                        )
-#                                                    )
-#                    )           )
-#
-#        if plot_3D_type == '3D Scatter':
-#            plot_3D.add_trace(go.Scatter3d  (
-#                                z           = z,
-#                                x           = x, 
-#                                y           = y,
-#                                mode        = 'markers',
-#                                marker      = dict(
-#                                            color = z,
-#                                            colorscale  = color_palette,
-#                                            opacity = 0.7
-#                                                    ),
-#                                            
-#                                hovertemplate = str(plot_config["Symbol_X"][0]) + ': %{x:.2f}' + 
-#                                                '<br>' + str(plot_config["Symbol_Y"][0])+ ': %{y:.2f}</br>' +
-#                                                str(plot_config["Symbol_Z"][0]) + ': %{z:.2f}',               
-#
-#                                )           )
-#
-#        if plot_3D_type == 'Surface':
-#                        plot_3D.add_trace(go.Surface  (
-#                                z           = Z,
-#                                x           = xi, 
-#                                y           = yi,
-#                                colorscale  = color_palette,
-#                                            
-#                                hovertemplate = str(plot_config["Symbol_X"][0]) + ': %{x:.2f}' + 
-#                                                '<br>' + str(plot_config["Symbol_Y"][0])+ ': %{y:.2f}</br>' +
-#                                                str(plot_config["Symbol_Z"][0]) + ': %{z:.2f}',               
-#                                colorbar    = dict  (
-#                                                    title       = str(plot_config["Symbol_Z"][0]),
-#                                                    titleside   = 'right',
-#                                                    titlefont   = dict  (
-#                                                                        size=12,
-#                                                                        family='Arial, sans'
-#                                                                        )
-#                                                    )
-#                                )           )
-#        if plot_3D_type == 'Heatmap':
-#                        plot_3D.add_trace(go.Heatmap  (
-#                                z           = Z,
-#                                x           = xi, 
-#                                y           = yi,
-#                                
-#                                colorscale  = color_palette,
-#                                            
-#                                hovertemplate = str(plot_config["Symbol_X"][0]) + ': %{x:.2f}' + 
-#                                                '<br>' + str(plot_config["Symbol_Y"][0])+ ': %{y:.2f}</br>' +
-#                                                str(plot_config["Symbol_Z"][0]) + ': %{z:.2f}', 
-#
-#                                colorbar    = dict  (
-#                                                    title       = str(plot_config["Symbol_Z"][0]),
-#                                                    titleside   = 'right',
-#                                                    titlefont   = dict  (
-#                                                                        size=12,
-#                                                                        family='Arial, sans'
-#                                                                        )
-#                                                    )
-#                                )           )
-#                                
-#        plot_3D.update_layout	(
-#                    autosize    = True,
-#                    height      = 720,
-#                    width       = 1080,
-#                    title       = plot_3D_type ,
-#                    xaxis       = dict(title=str(plot_config["Symbol_X"][0])),
-#                    yaxis       = dict(title=str(plot_config["Symbol_Y"][0]))
-#                    
-#                    )
-#
-#        st.plotly_chart(plot_3D)
+def plot_3D(df, plot_config, color_palette):
+
+        x = df[plot_config["Symbol_X"][0]]
+        y = df[plot_config["Symbol_Y"][0]]
+        z = df[plot_config["Symbol_Z"][0]]
+
+        if plot_config["Chart_Type"][0] != '3D Scatter':
+    
+            xi = np.linspace( float(min(x)), float(max(x)), int(plot_config["Grid_Res"]) )
+            yi = np.linspace( float(min(y)), float(max(y)), int(plot_config["Grid_Res"]) )
+    
+            X,Y = np.meshgrid(xi,yi)
+    
+            Z = griddata( (x,y),z,(X,Y), fill_value=plot_config["Fill_Value"], method='linear')
+
+        plot_3D = go.Figure()
+
+        if plot_config["Chart_Type"][0] == 'Contour':
+            plot_3D.add_trace(go.Contour  (
+                                z           = Z,
+                                x           = xi, 
+                                y           = yi,
+                                colorscale  = color_palette,
+                                hovertemplate = str(plot_config["Symbol_X"][0]) + ': %{x:.2f}' + 
+                                                '<br>' + str(plot_config["Symbol_Y"][0])+ ': %{y:.2f}</br>' +
+                                                str(plot_config["Symbol_Z"][0]) + ': %{z:.2f}',
+                                contours    = dict  (
+                                                    coloring    ='heatmap',
+                                                    showlabels  = True,
+                                                    labelfont   = dict  (
+                                                                        size = 10,
+                                                                        color = 'white',
+                                                                        )
+                                                    ), 
+
+                                colorbar    = dict  (
+                                                    title       = str(plot_config["Symbol_Z"][0]),
+                                                    titleside   = 'right',
+                                                    titlefont   = dict  (
+                                                                        size=12,
+                                                                        family='Arial, sans'
+                                                                        )
+                                                    )
+                    )           )
+
+        if plot_config["Chart_Type"][0] == '3D Scatter':
+            plot_3D.add_trace(go.Scatter3d  (
+                                z           = z,
+                                x           = x, 
+                                y           = y,
+                                mode        = 'markers',
+                                marker      = dict(
+                                            color = z,
+                                            colorscale  = color_palette,
+                                            opacity = 0.7
+                                                    ),
+                                            
+                                hovertemplate = str(plot_config["Symbol_X"][0]) + ': %{x:.2f}' + 
+                                                '<br>' + str(plot_config["Symbol_Y"][0])+ ': %{y:.2f}</br>' +
+                                                str(plot_config["Symbol_Z"][0]) + ': %{z:.2f}',               
+
+                                )           )
+
+        if plot_config["Chart_Type"][0] == 'Surface':
+                        plot_3D.add_trace(go.Surface  (
+                                z           = Z,
+                                x           = xi, 
+                                y           = yi,
+                                colorscale  = color_palette,
+                                            
+                                hovertemplate = str(plot_config["Symbol_X"][0]) + ': %{x:.2f}' + 
+                                                '<br>' + str(plot_config["Symbol_Y"][0])+ ': %{y:.2f}</br>' +
+                                                str(plot_config["Symbol_Z"][0]) + ': %{z:.2f}',               
+                                colorbar    = dict  (
+                                                    title       = str(plot_config["Symbol_Z"][0]),
+                                                    titleside   = 'right',
+                                                    titlefont   = dict  (
+                                                                        size=12,
+                                                                        family='Arial, sans'
+                                                                        )
+                                                    )
+                                )           )
+        if plot_config["Chart_Type"][0] == 'Heatmap':
+                        plot_3D.add_trace(go.Heatmap  (
+                                z           = Z,
+                                x           = xi, 
+                                y           = yi,
+                                
+                                colorscale  = color_palette,
+                                            
+                                hovertemplate = str(plot_config["Symbol_X"][0]) + ': %{x:.2f}' + 
+                                                '<br>' + str(plot_config["Symbol_Y"][0])+ ': %{y:.2f}</br>' +
+                                                str(plot_config["Symbol_Z"][0]) + ': %{z:.2f}', 
+
+                                colorbar    = dict  (
+                                                    title       = str(plot_config["Symbol_Z"][0]),
+                                                    titleside   = 'right',
+                                                    titlefont   = dict  (
+                                                                        size=12,
+                                                                        family='Arial, sans'
+                                                                        )
+                                                    )
+                                )           )
+                                
+        plot_3D.update_layout	(
+                    autosize    = True,
+                    height      = 720,
+                    width       = 1080,
+                    title       = plot_config["Chart_Type"][0] ,
+                    xaxis       = dict(title=str(plot_config["Symbol_X"][0])),
+                    yaxis       = dict(title=str(plot_config["Symbol_Y"][0]))
+                    
+                    )
+
+        return plot_3D

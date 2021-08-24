@@ -18,18 +18,21 @@ def trace_dict(toggle):
         trace["Color"]      = []
         trace["Size"]       = []
         trace["Style"]      = []
-        trace["Chart_type"] = []
+        trace["Chart_Type"] = []
         trace["Function"]   = []
         trace["Value"]      = []
 
     elif toggle == "3D Plot":
-        trace["Symbol_X"]   = []
-        trace["Symbol_Y"]   = []
-        trace["Symbol_Z"]   = []
-        trace["Name_X"]     = []
-        trace["Name_Y"]     = []
-        trace["Name_Z"]     = []
-        trace["Grid_Res"]   = []
+        trace["Symbol_X"]       = []
+        trace["Symbol_Y"]       = []
+        trace["Symbol_Z"]       = []
+        trace["Name_X"]         = []
+        trace["Name_Y"]         = []
+        trace["Name_Z"]         = []
+        trace["Chart_Type"]     = []
+        trace["Fill_Value"]     = []
+        trace["Interp_Method"]  = []
+        trace["Grid_Res"]       = []
     
     return trace
 
@@ -91,7 +94,6 @@ def get_y_axis(y_axis):
 
     return y_axis_plot 
 
-@st.cache
 def get_y_axis_config(plot_config):
     ''' 
     Get configuration for y axis / subplot
