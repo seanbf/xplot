@@ -1,17 +1,7 @@
 import streamlit as st
 from src.utils import load_dataframe
-
-def fixed_content():
-    """
-    Contains fixed content visible across different links
-    :return:
-    """
-    # Main Page
-    st.title('2D Plotter')   
-    st.checkbox('Plot',value = True)
-    st.checkbox('Display plotted data as table',value = False)
-    st.checkbox('Display all data as table')
-
+from src.plot_setup import trace_dict
+from src.colors import sequential_color_dict, diverging_color_dict, plot_color_set, qualitive_color_dict
 
 def plotly_toolbar_config():
     # PLOTLY TOOLBAR/ BEHAVIOUR
@@ -32,39 +22,201 @@ def plotly_toolbar_config():
                 })
     return config 
 
-def colormap_config():
-    colormap_config = dict({
-        'staticPlot' : True
-    })
-    return colormap_config
-
-def views(link):
+def view_2d_or_3d(radio_2d_3d):
     """
     Select between 2D and 3D plotter
     """
-    st.sidebar.header("CSV Plot")
-    st.sidebar.markdown('''<small>v0.2</small>''', unsafe_allow_html=True)
-
-    uploaded_file = st.sidebar.file_uploader(label="Upload your csv or excel file here.",
-                                                 accept_multiple_files=False,
-                                                 type=['csv', 'xlsx'])
     
-    if uploaded_file is not None:
+    if radio_2d_3d      == '2D Plot':
+        trace           = trace_dict(radio_2d_3d)
 
-        dataframe, columns = load_dataframe(uploaded_file=uploaded_file)
+    elif radio_2d_3d    == '3D Plot':
+        trace           = trace_dict(radio_2d_3d)
+    
+    return trace
 
-        # Create Index array, to plot against. Not all data has timestamp
-        symbols = list(dataframe)
-        # Use to NOT plot.
-        symbols.insert(0, "Not Selected")
+def plot_config_3d(radio_2d_3d, trace):
+    """
+    Container to configure 3D plot, i.e colormapping
+    """
 
-        trace =  dict()
+    if radio_2d_3d == "3D Plot":
+        with st.beta_expander("3D Plot Configuration", expanded=True):
+            col_plot_type, col_col_type, col_choice, col_preview, col_grid_res, col_fill, col_interp = st.beta_columns(7)
 
-        if link == '2D Plot':
-            st.header("2D Plotter")
+            plot_3D_type = col_plot_type.selectbox("Plot Type", ["Contour","3D Scatter","Surface","Heatmap"])
+            color_set_type = col_col_type.selectbox('Color Map Type', ['Sequential','Diverging'], key="coltype")
 
-        elif link == '3D Plot':
-            st.header('3D Plotter')
+        if color_set_type == 'Sequential':
+            color_map = list(sequential_color_dict().keys())
+        else:
+            color_map = list(diverging_color_dict().keys())
+
+        color_set   = col_choice.selectbox("Color Map", color_map)  
+        if color_set_type == 'Sequential':
+            color_palette = sequential_color_dict().get(color_set)
+        else:
+            color_palette = diverging_color_dict().get(color_set)
+
+        col_preview.plotly_chart(plot_color_set(color_palette, color_set, radio_2d_3d), config = dict({'staticPlot' : True}))
+        if plot_3D_type != '3D Scatter':
+            grid_res = col_grid_res.number_input("Grid Resolution", min_value=0.0, max_value=100000.0, value=50.0, step=0.5, key="Grid_Res")
+            fill_value = col_fill.selectbox("Fill Value", ["nan",0], help="fill missing data with the selected value")
+            interpolation_method = col_interp.selectbox("Interpolation Method", ["linear","nearest","cubic"])
+            trace["Grid_Res"].append(grid_res)
+        else:
+            trace["Grid_Res"].append(0)
+            fill_value = None
+            interpolation_method = None
+            trace["Grid_Res"] = None
 
     else:
-        st.warning("Please upload data")
+        plot_3D_type = None
+        color_palette = None
+        fill_value = None
+        interpolation_method = None
+        trace["Grid_Res"] = None
+
+    return plot_3D_type, color_palette, fill_value, interpolation_method, trace["Grid_Res"]
+
+def plot_config_2d(radio_2d_3d):
+    with st.beta_expander("2D Plot Configuration", expanded=True):
+        col_choice, col_show, col_extra_signals = st.beta_columns((1,2,1))
+        qualitive_color_sets_dict       = qualitive_color_dict()
+        qualitive_color_sets_names      = list(qualitive_color_sets_dict.keys())
+        color_set = col_choice.selectbox("Color Palette",qualitive_color_sets_names, key='color_set', help = "Recommended: Light Theme use Plotly, Dark Theme use Pastel" )
+       
+        color_palette = qualitive_color_sets_dict.get(color_set)
+    
+        col_show.plotly_chart(plot_color_set(color_palette, color_set, radio_2d_3d), config = dict({'staticPlot' : True}))
+
+        extra_signals = col_extra_signals.number_input("Extra Signals", min_value=0, max_value=30, value=0, step=1, help = "Generate extra signal containers, useful if your comparing signals with functions applied")
+
+    return color_palette, extra_signals
+
+def signal_container_3d(trace, symbols):
+    '''
+    Generate containers for 3d plot.
+    '''
+
+    with st.sidebar.beta_expander("X", expanded=True):
+        trace["Symbol_X"].append(st.selectbox("Symbol", symbols, key="Symbol_X"))
+        trace["Name_X"].append(st.text_input("Rename Symbol", "", key="Name_X"))
+
+    with st.sidebar.beta_expander("Y", expanded=True):
+        trace["Symbol_Y"].append(st.selectbox("Symbol", symbols, key="Symbol_Y"))
+        trace["Name_Y"].append(st.text_input("Rename Symbol", "", key="Name_Y"))
+        
+    with st.sidebar.beta_expander("Z", expanded=True):
+        trace["Symbol_Z"].append(st.selectbox("Symbol", symbols, key="Symbol_Z"))
+        trace["Name_Z"].append(st.text_input("Rename Symbol", "", key="Name_Z"))
+
+    return trace["Symbol_X"], trace["Symbol_Y"], trace["Symbol_Z"], trace["Name_X"], trace["Name_Y"], trace["Name_Z"]
+
+def signal_container_2d():
+
+    # X-Axis
+    with st.sidebar.beta_expander("X Axis", expanded=True):
+        symbol_0    = st.selectbox("Symbol", symbols, key="symbol_0")
+        #function_0  = st.multiselect('Functions', ['time2frequency','gain'], key="function_0" )
+
+    total_signals = 6
+    color_counter = 0
+
+    if extra_signals > 0:
+        total_signals = total_signals + extra_signals
+
+    for available_symbols in range(1, total_signals):
+
+        if available_symbols <= 5:
+            expand_contaner = True
+        else:
+            expand_contaner = False
+
+        if color_counter > len(color_palette):
+            color_counter = 0
+
+        with st.sidebar.beta_expander("Signal "+str(available_symbols), expanded=expand_contaner):
+            # Symbol
+            trace["Symbol"].append(st.selectbox("Symbol", symbols, key="symbol_"+str(available_symbols)))
+
+            col_name, col_format = st.beta_columns((2,1))
+            # Rename signal
+            trace["Name"].append(col_name.text_input("Rename Signal", "", key="name_"+str(available_symbols)))
+            col_format.text("Format")
+            # Hex representation
+            trace["Hex_rep"].append(col_format.checkbox("Hex",help = "Show Hex of Signal", key="hex_"+str(available_symbols)))
+            # Binrary representation
+            trace["Bin_rep"].append(col_format.checkbox("Binary",help = "Show Binrary of Signal", key="bin_"+str(available_symbols)))
+
+            col_axis,col_color, col_subplot = st.beta_columns(3)
+            # Y Axis
+            trace["Axis"].append(col_axis.radio('Axis', ['y1','y2'], key="axis_"+str(available_symbols)))
+            # Color
+            trace["Color"].append(col_color.color_picker('Pick a color ',color_palette[color_counter],help="(Default:"+color_palette[color_counter]+")", key="color_"+str(available_symbols)))
+            # Subplot
+            trace["Plot_row"].append(col_subplot.selectbox("Subplot",["Main Plot","Subplot 1","Subplot 2"], key="subplot_"+str(available_symbols)))
+
+            ## Formatting
+            col_type, col_style, col_size  = st.beta_columns(3)
+            trace["Chart_type"].append(col_type.radio('Type', ['lines','markers','lines+markers'], key="type_"+str(available_symbols) ))
+            if  trace["Chart_type"][available_symbols-1] == 'lines':
+                trace["Style"].append(col_style.selectbox("Style",  ["solid", "dot", "dash", "longdash", "dashdot","longdashdot"], key="style_"+str(available_symbols)))
+            if  trace["Chart_type"][available_symbols-1] == 'markers':
+                trace["Style"].append(col_style.selectbox("Style", marker_names, help="https://plotly.com/python/marker-style/", key="style_"+str(available_symbols)))
+            if  trace["Chart_type"][available_symbols-1] == 'lines+markers':
+                trace["Style"].append(col_style.selectbox("Style", marker_names, help="https://plotly.com/python/marker-style/", key="style_"+str(available_symbols)))
+           
+            trace["Size"].append(col_size.number_input("Size", min_value=0.0, max_value=10.0, value=2.0, step=0.5, key="size_"+str(available_symbols)))
+
+            # Functions
+            col_function, col_function_var = st.beta_columns((2))
+
+            function_chosen = (col_function.multiselect('Functions', y_function_names ,default=[], key="function_"+str(available_symbols) ) )
+
+            trace_function = []
+            trace_function_value = []
+
+            if len(function_chosen) != 0:            
+
+                for functions in range(0, len(function_chosen)):
+                    if 'gain' in function_chosen[functions]:
+                        trace_function.append("gain")
+                        trace_function_value.append(float(col_function_var.text_input("Gain",0, key="gain_"+str(available_symbols))) )
+
+                    if 'offset' in function_chosen[functions]:
+                        trace_function.append("offset")
+                        trace_function_value.append(float(col_function_var.text_input("Offset",0, key="offset_"+str(available_symbols))) )
+
+                    if 'rms2peak' in function_chosen[functions]:
+                        trace_function.append("rms2peak")
+                        trace_function_value.append("None")
+
+                    if 'peak2rms' in function_chosen[functions]:
+                        trace_function.append("peak2rms")
+                        trace_function_value.append("None")
+
+                    if 'rpm2rads' in function_chosen[functions]:
+                        trace_function.append("rpm2rads")
+                        trace_function_value.append("None")
+
+                    if 'rads2rpm' in function_chosen[functions]:
+                        trace_function.append("rads2rpm")
+                        trace_function_value.append("None")
+
+                    if 'degree2revs' in function_chosen[functions]: 
+                        trace_function.append("degree2revs")
+                        trace_function_value.append("None")
+
+                    if 'revs2degree' in function_chosen[functions]: 
+                        trace_function.append("revs2degree")
+                        trace_function_value.append("None")
+
+                trace["Function"].append(trace_function)
+                trace["Value"].append(trace_function_value)
+
+            else:
+                trace["Function"].append('Not Selected')
+                trace["Value"].append("None")
+
+        color_counter = color_counter + 1     
