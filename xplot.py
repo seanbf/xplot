@@ -1,36 +1,30 @@
 import streamlit as st
 import pandas as pd
 
-
-from src.image_export import show_export_format
-from src.colors import qualitive_color_dict, diverging_color_dict, sequential_color_dict, plot_color_set 
+from src.colors import qualitive_color_dict, plot_color_set 
 from src.functions import y_functions_dict
-from src.layout import plotly_toolbar_config, colormap_config
-from src.plotter import get_markers, plot_2D
+from src.layout import plotly_toolbar_config, view_2d_or_3d, plot_config_3d, plot_config_2d,  signal_container_3d
+from src.plotter import plot_2D
+from src.plot_setup import get_markers
 from src.utils import load_dataframe
 
 page_config = st.set_page_config  (
-                page_title              ="CSV Plotter", 
+                page_title              ="xPlot", 
                 page_icon               ="📈", 
                 layout                  ='wide', 
                 initial_sidebar_state   ='auto'
                 
                 )
+# Main Page
+st.sidebar.title('xPlot')
+st.sidebar.markdown('''<small>v0.1</small>''', unsafe_allow_html=True)
 
-colormap_preview_config         = colormap_config()
 toolbar                         = plotly_toolbar_config()
-
-qualitive_color_sets_dict       = qualitive_color_dict()
-qualitive_color_sets_names      = list(qualitive_color_sets_dict.keys())
-
-diverging_color_sets_dict       = diverging_color_dict()
-diverging_color_sets_names      = list(diverging_color_sets_dict.keys())
-
-sequential_color_sets_dict      = sequential_color_dict()
-sequential_color_sets_names     = list(sequential_color_sets_dict.keys())
 
 y_functions                     = y_functions_dict()
 y_function_names                = list(y_functions.keys())
+
+marker_names = get_markers()
 
 # SIDEBAR BEHAVIOUR
 st.markdown(
@@ -42,129 +36,52 @@ st.markdown(
     [data-testid="stSidebar"][aria-expanded="false"] > div:first-child {
         width: 650px;
         margin-left: -650px;
-    }
+    }   
     </style>
     """,
     unsafe_allow_html=True,)
 
-marker_names = get_markers()
+radio_2d_3d         = st.sidebar.radio('', ['2D Plot','3D Plot'], key="2Dor3D")
 
-# Main Page
-st.title('CSV Plotter')
+trace = view_2d_or_3d(radio_2d_3d)
 
-main_left_col, main_right_col = st.beta_columns(2)
-checkbox_plot           = main_left_col.checkbox('Plot',value = True)
-checkbox_table          = main_left_col.checkbox('Display plotted data as table',value = False)
-checkbox_raw_table      = main_left_col.checkbox('Display all data as table')
+if radio_2d_3d == '3D Plot':
+    plot_3D_type, color_palette, fill_value, interpolation_method, trace["Grid_Res"] = plot_config_3d(radio_2d_3d,trace)
+else:
+    color_palette, extra_signals  = plot_config_2d(radio_2d_3d)
 
-st.sidebar.markdown('''<small>v0.1</small>''', unsafe_allow_html=True)
+checkbox_table          = st.checkbox('Display plotted data as table',value = False)
+checkbox_raw_table      = st.checkbox('Display all data as table')
+
+
    
-uploaded_file = st.sidebar.file_uploader(label="Upload your csv or excel file here.",
+uploaded_file = st.sidebar.file_uploader(label="",
                                                  accept_multiple_files=False,
                                                  type=['csv', 'xlsx'])
 
 if uploaded_file is None:
-    st.warning("Please Upload File")
+    st.sidebar.warning("Please Upload File Above")
 elif uploaded_file is not None:
 
     dataframe, columns = load_dataframe(uploaded_file=uploaded_file)
 
     # Create Index array, to plot against. Not all data has timestamp
     symbols = list(dataframe)
+
     # Use to NOT plot.
     symbols.insert(0, "Not Selected")
-
-    trace =  dict()
     
     # Side bar items
-    threeD = st.sidebar.checkbox("3D Plot",help = "Plot 3D Chart", key="3D")
-
-    # 3D Trace Configuration
-    if threeD == True:
-
-        trace["Symbol_X"]   = []
-        trace["Symbol_Y"]   = []
-        trace["Symbol_Z"]   = []
-        
-        trace["Name_X"]     = []
-        trace["Name_Y"]     = []
-        trace["Name_Z"]     = []
-        
-        trace["Grid_Res"]   = []
-        #trace["Function"]  = []
-        #trace["Value"]     = []
-
-        y_axis_spec         = []
-        trace_function      = []
-        signal_functions    = []
-
-        with st.sidebar.beta_expander("Plot Setup", expanded=True):
-            plot_3D_type = st.selectbox("3D Type", ["Contour","3D Scatter","Surface","Heatmap"])
-
-            col_coltype, col_choice = st.beta_columns((1,2))
-            
-            color_set_type = col_coltype.radio('Color Set Type', ['Sequential','Diverging'], key="coltype")
-            if color_set_type == 'Sequential':
-                color_map = sequential_color_sets_names
-            else:
-                color_map = diverging_color_sets_names
-            
-            color_set   = col_choice.selectbox("Color Map", color_map)
-
-            if color_set_type == 'Sequential':
-                color_palette = sequential_color_sets_dict.get(color_set)
-            else:
-                color_palette = diverging_color_sets_dict.get(color_set)
-   
-            st.plotly_chart(plot_color_set(color_palette, color_set, threeD), config = colormap_preview_config)
-        
-            if plot_3D_type != '3D Scatter':
-                trace["Grid_Res"].append(st.number_input("Grid Resolution", min_value=0.0, max_value=100000.0, value=50.0, step=0.5, key="Grid_Res"))
-                fill_value = interpolation_method = st.selectbox("Fill Value", ["nan",0], help="fill missing data with the selected value")
-                interpolation_method = st.selectbox("Interpolation Method", ["linear","nearest","cubic"])
-            else:
-                trace["Grid_Res"].append(0)
-                
-        with st.sidebar.beta_expander("X", expanded=True):
-            trace["Symbol_X"].append(st.selectbox("Symbol", symbols, key="Symbol_X"))
-            trace["Name_X"].append(st.text_input("Rename Symbol", "", key="Name_X"))
-
-        with st.sidebar.beta_expander("Y", expanded=True):
-            trace["Symbol_Y"].append(st.selectbox("Symbol", symbols, key="Symbol_Y"))
-            trace["Name_Y"].append(st.text_input("Rename Symbol", "", key="Name_Y"))
-
-        with st.sidebar.beta_expander("Z", expanded=True):
-            trace["Symbol_Z"].append(st.selectbox("Symbol", symbols, key="Symbol_Z"))
-            trace["Name_Z"].append(st.text_input("Rename Symbol", "", key="Name_Z"))
-
-    # 2D Trace Configuration
-    else:
-        with st.sidebar.beta_expander("Plot Setup", expanded=True):
-            col_choice, col_show = st.beta_columns((1,2))
-            
-            color_set = col_choice.selectbox("Color Palette",qualitive_color_sets_names, key='color_set', help = "Recommended: Light Theme use Plotly, Dark Theme use Pastel" )
-            
-            color_palette = qualitive_color_sets_dict.get(color_set)
+    trace_function      = []
+    signal_functions    = []
     
-            col_show.plotly_chart(plot_color_set(color_palette, color_set, threeD), config = colormap_preview_config)
+    # 3D Trace Configuration
+    if radio_2d_3d == '3D Plot':
+        trace["Symbol_X"], trace["Symbol_Y"], trace["Symbol_Z"], trace["Name_X"], trace["Name_Y"], trace["Name_Z"] = signal_container_3d(trace, symbols)
+        
+    # 2D Trace Configuration
+    elif radio_2d_3d == '2D Plot':
 
-
-            extra_signals = st.number_input("Extra Signals", min_value=0, max_value=30, value=0, step=1, help = "Generate extra signal containers, useful if your comparing signals with functions applied")
-
-        trace["Symbol"]     = []
-        trace["Name"]       = []
-        trace["Hex_rep"]    = []
-        trace["Bin_rep"]    = []
-        trace["Plot_row"]   = []
-        trace["Axis"]       = []
-        trace["Color"]      = []
-        trace["Size"]       = []
-        trace["Style"]      = []
-        trace["Chart_type"] = []
-        trace["Function"]   = []
-        trace["Value"]      = []
-
-        y_axis_spec         = []
         trace_function      = []
         signal_functions    = []
 
@@ -279,11 +196,11 @@ plotted_data        = pd.DataFrame()
 plot_sum            = []
 
 # Generate
-if main_left_col.button("Plot"):
+if st.button("Plot"):
   
     plot_config     = pd.DataFrame(trace)
 
-    if threeD == False:
+    if radio_2d_3d == '2D Plot':
         plot_config     = plot_config[plot_config["Symbol"]!='Not Selected']
         plot_config.reset_index(inplace=True)
     
