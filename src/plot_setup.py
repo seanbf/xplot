@@ -178,16 +178,16 @@ def get_subplot(Subplot):
 #                Function_Value_String = Function_Value_String + k
 #
 #            Name = str(signal_name) + Function_Value_String
-#            temp_col = df[plot_config["Symbol"][row]]
+#            temp_col = dataframe[plot_config["Symbol"][row]]
 #            for j in range(0, len(plot_config["Function"][row])):
 #                if plot_config["Value"][row][j] == "None":
 #                    temp_col = np.vectorize(y_functions_dict[plot_config["Function"][row][j]])(temp_col)
 #                else:
 #                    temp_col = np.vectorize(y_functions_dict[plot_config["Function"][row][j]])(temp_col, plot_config["Value"][row][j] )
 #
-#            df[Name] = temp_col
-#            y_axis_symbol = df[Name]
+#            dataframe[Name] = temp_col
+#            y_axis_symbol = dataframe[Name]
 #            plotted_data[Name] = y_axis_symbol
 #        else:
-#            y_axis_symbol = df[plot_config["Symbol"][row]]
+#            y_axis_symbol = dataframe[plot_config["Symbol"][row]]
 #            plotted_data[Name] = y_axis_symbol

@@ -6,6 +6,7 @@ from plotly.validators.scatter.marker import SymbolValidator
 from scipy.interpolate import griddata
 from plotly.subplots import make_subplots
 from src.functions import y_functions_dict
+import time
 
 @st.cache
 def get_hovertip(Hex, Bin):
@@ -39,7 +40,7 @@ def get_name(renamed_name,symbol_name):
         Name = renamed_name
     return Name
 
-@st.cache
+
 def get_y_axis(y_axis):
     ''' 
     Get name of signal or new name, input by user.
@@ -51,7 +52,7 @@ def get_y_axis(y_axis):
     else:
         y_axis_plot = True
 
-@st.cache
+
 def get_y_axis_config(plot_config):
     ''' 
     Get configuration for y axis / subplot
@@ -91,7 +92,7 @@ def get_y_axis_config(plot_config):
         y_axis_config.append([{'secondary_y': True}])
     else:
         pass
-
+    
     return y_axis_config
 
 @st.cache
@@ -133,146 +134,153 @@ def get_subplot(Subplot):
 #                Function_Value_String = Function_Value_String + k
 #
 #            Name = str(signal_name) + Function_Value_String
-#            temp_col = df[plot_config["Symbol"][row]]
+#            temp_col = dataframe[plot_config["Symbol"][row]]
 #            for j in range(0, len(plot_config["Function"][row])):
 #                if plot_config["Value"][row][j] == "None":
 #                    temp_col = np.vectorize(y_functions_dict[plot_config["Function"][row][j]])(temp_col)
 #                else:
 #                    temp_col = np.vectorize(y_functions_dict[plot_config["Function"][row][j]])(temp_col, plot_config["Value"][row][j] )
 #
-#            df[Name] = temp_col
-#            y_axis_symbol = df[Name]
+#            dataframe[Name] = temp_col
+#            y_axis_symbol = dataframe[Name]
 #            plotted_data[Name] = y_axis_symbol
 #        else:
-#            y_axis_symbol = df[plot_config["Symbol"][row]]
+#            y_axis_symbol = dataframe[plot_config["Symbol"][row]]
 #            plotted_data[Name] = y_axis_symbol
 
-def plot_2D(df, plot_config, plotted_data, symbol_0):
-
-    y_axis_config = get_y_axis_config(plot_config)
+def plot_2D(dataframe, plot_config, plotted_data, symbol_0):
     
-    plot = make_subplots(   
-                        rows                = len(plot_config["Plot_row"].unique()), 
-                        cols                = 1,
-                        shared_xaxes        = True,
-                        specs               = y_axis_config,
-                        vertical_spacing    = 0.05
-                        )
-
-    # For each signal config.
-    for row in range(0,len(plot_config)):
-
-        # Determine subplots
-        subplot, plotheight = get_subplot(plot_config["Plot_row"][row])
-
-        # Determine y-axis
-        y_axis_plot = get_y_axis(plot_config["Axis"][row])
-
-        # Show hex / binary 
-        hovertip = get_hovertip(plot_config["Hex_rep"][row], plot_config["Bin_rep"][row])
-
-        # Rename Signals
-        Name = get_name(plot_config["Name"][row], plot_config["Symbol"][row])
-
-        ## Apply function(s) to signal
-        # Function signal name
-        Function_and_Value  = []
-        Function_Value_String         = ''
-
-        if plot_config["Function"][row] != 'Not Selected':
-            
-            for j in range(0, len(plot_config["Function"][row])):
-
-                if plot_config["Value"][row][j] != "None":
-                    Value_string = '(' + str(plot_config["Value"][row][j]) + ')'
-
-                else:
-                    Value_string = ''
-
-                Function_string = str(plot_config["Function"][row][j])
-
-                Function_and_Value.append(' {' + Function_string + Value_string + '}')
-
-            for k in Function_and_Value:
-                Function_Value_String = Function_Value_String + k
-
-            Name = str(Name) + Function_Value_String
-            temp_col = df[plot_config["Symbol"][row]]
-            for j in range(0, len(plot_config["Function"][row])):
-                if plot_config["Value"][row][j] == "None":
-                    temp_col = np.vectorize(y_functions_dict[plot_config["Function"][row][j]])(temp_col)
-                else:
-                    temp_col = np.vectorize(y_functions_dict[plot_config["Function"][row][j]])(temp_col, plot_config["Value"][row][j] )
-
-            df[Name] = temp_col
-            y_axis_symbol = df[Name]
-            plotted_data[Name] = y_axis_symbol
-        else:
-            y_axis_symbol = df[plot_config["Symbol"][row]]
-            plotted_data[Name] = y_axis_symbol
-
-        # Plot type
-        if plot_config["Chart_Type"][row] == 'lines':
-                plot.add_trace	(go.Scatter (  
-                                    x       		= df[symbol_0],
-                                    y       		= y_axis_symbol,
-                                    name 			= Name,
-                                    hovertemplate 	= hovertip,
-                                    mode            = 'lines',
-                                    line            = dict  (
-                                                            color   = plot_config["Color"][row], 
-                                                            dash    = plot_config["Style"][row], 
-                                                            width   = plot_config["Size"][row]
-                                                            ),
-                                            ),
-                                row                 = subplot,
-                                col                 = 1,
-                                secondary_y         = y_axis_plot
-                                )
-
-        elif plot_config["Chart_Type"][row] == 'markers':
-                plot.add_trace	(go.Scatter (  
-                                    x       		= df[symbol_0],
-                                    y       		= y_axis_symbol,
-                                    name 			= Name,
-                                    hovertemplate 	= hovertip,
-                                    mode            = 'markers',
-                                    marker          = dict  (
-                                                            color   = plot_config["Color"][row], 
-                                                            symbol  = plot_config["Style"][row]
-                                                            ),
-                                    yaxis           = plot_config["Axis"][row]
-                                            ),  
-                                    row             = subplot, 
-                                    col             = 1,
-                                    secondary_y     = y_axis_plot          
-                                )
-        elif plot_config["Chart_Type"][row] == 'lines+markers':
-                plot.add_trace	(go.Scatter (  
-                                    x       		= df[symbol_0],
-                                    y       		= y_axis_symbol,
-                                    name 			= Name,
-                                    hovertemplate 	= hovertip,
-                                    mode            = 'lines+markers',
-                                    marker          = dict  (
-                                                            color   = plot_config["Color"][row]
-                                                            ),
-                                    line            = dict(color=plot_config["Color"][row]),
-                                    yaxis           = plot_config["Axis"][row]
-                                            ),  
-                                    row             = subplot, 
-                                    col             = 1,    
-                                    secondary_y     = y_axis_plot         
-                                )
-        else:
-            st.warning("Chart_Type Failure")
+    if len(plot_config["Plot_row"]) == 0:
+        st.warning("Select an <X-axis> symbol and at least one <Y-axis> symbol")
+        st.stop()
         
-        plot.update_layout	(
-                            hovermode	= "x",  
-                            autosize    = True,
-                            height      = plotheight
-                            )
+    with st.spinner('Generating Interactive Plot'):
+        y_axis_config = get_y_axis_config(plot_config)
 
+        plot = make_subplots(   
+                            rows                = len(plot_config["Plot_row"].unique()), 
+                            cols                = 1,
+                            shared_xaxes        = True,
+                            specs               = y_axis_config,
+                            vertical_spacing    = 0.05
+                            )
+        
+
+        # For each signal config.
+        for row in range(0,len(plot_config)):
+
+            # Determine subplots
+            subplot, plotheight = get_subplot(plot_config["Plot_row"][row])
+
+            # Determine y-axis
+            y_axis_plot = get_y_axis(plot_config["Axis"][row])
+
+            # Show hex / binary 
+            hovertip = get_hovertip(plot_config["Hex_rep"][row], plot_config["Bin_rep"][row])
+
+            # Rename Signals
+            Name = get_name(plot_config["Name"][row], plot_config["Symbol"][row])
+
+            ## Apply function(s) to signal
+            # Function signal name
+            Function_and_Value  = []
+            Function_Value_String         = ''
+
+            if plot_config["Function"][row] != 'Not Selected':
+
+                for j in range(0, len(plot_config["Function"][row])):
+
+                    if plot_config["Value"][row][j] != "None":
+                        Value_string = '(' + str(plot_config["Value"][row][j]) + ')'
+
+                    else:
+                        Value_string = ''
+
+                    Function_string = str(plot_config["Function"][row][j])
+
+                    Function_and_Value.append(' {' + Function_string + Value_string + '}')
+
+                for k in Function_and_Value:
+                    Function_Value_String = Function_Value_String + k
+
+                Name = str(Name) + Function_Value_String
+                temp_col = dataframe[plot_config["Symbol"][row]]
+                for j in range(0, len(plot_config["Function"][row])):
+                    if plot_config["Value"][row][j] == "None":
+                        temp_col = np.vectorize(y_functions_dict[plot_config["Function"][row][j]])(temp_col)
+                    else:
+                        temp_col = np.vectorize(y_functions_dict[plot_config["Function"][row][j]])(temp_col, plot_config["Value"][row][j] )
+
+                dataframe[Name] = temp_col
+                y_axis_symbol = dataframe[Name]
+                plotted_data[Name] = y_axis_symbol
+            else:
+                y_axis_symbol = dataframe[plot_config["Symbol"][row]]
+                plotted_data[Name] = y_axis_symbol
+
+            # Plot type
+
+            if plot_config["Chart_Type"][row] == 'lines':
+                    plot.add_trace	(go.Scatter (  
+                                        x       		= dataframe[symbol_0],
+                                        y       		= y_axis_symbol,
+                                        name 			= Name,
+                                        hovertemplate 	= hovertip,
+                                        mode            = 'lines',
+                                        yaxis           = "y2",
+                                        line            = dict  (
+                                                                color   = plot_config["Color"][row], 
+                                                                dash    = plot_config["Style"][row], 
+                                                                width   = plot_config["Size"][row]
+                                                                ),
+                                                ),
+                                    row                 = subplot,
+                                    col                 = 1,
+                                    secondary_y         = y_axis_plot
+                                    )
+
+            elif plot_config["Chart_Type"][row] == 'markers':
+                    plot.add_trace	(go.Scatter (  
+                                        x       		= dataframe[symbol_0],
+                                        y       		= y_axis_symbol,
+                                        name 			= Name,
+                                        hovertemplate 	= hovertip,
+                                        mode            = 'markers',
+                                        marker          = dict  (
+                                                                color   = plot_config["Color"][row], 
+                                                                symbol  = plot_config["Style"][row]
+                                                                ),
+                                        yaxis           = plot_config["Axis"][row]
+                                                ),  
+                                        row             = subplot, 
+                                        col             = 1,
+                                        secondary_y     = y_axis_plot          
+                                    )
+            elif plot_config["Chart_Type"][row] == 'lines+markers':
+                    plot.add_trace	(go.Scatter (  
+                                        x       		= dataframe[symbol_0],
+                                        y       		= y_axis_symbol,
+                                        name 			= Name,
+                                        hovertemplate 	= hovertip,
+                                        mode            = 'lines+markers',
+                                        marker          = dict  (
+                                                                color   = plot_config["Color"][row]
+                                                                ),
+                                        line            = dict(color=plot_config["Color"][row]),
+                                        yaxis           = plot_config["Axis"][row]
+                                                ),  
+                                        row             = subplot, 
+                                        col             = 1,    
+                                        secondary_y     = y_axis_plot         
+                                    )
+            else:
+                st.warning("Chart_Type Failure")
+
+            plot.update_layout	(
+                                hovermode	= "x",  
+                                autosize    = True,
+                                height      = plotheight
+                                )    
 
     return plot
     
@@ -288,11 +296,11 @@ def plot_2D(df, plot_config, plotted_data, symbol_0):
     #sum_col_right.button(label='Export Data')
 
 @st.cache
-def plot_3D(df, plot_config, color_palette):
+def plot_3D(dataframe, plot_config, color_palette):
 
-        x = df[plot_config["Symbol_X"][0]]
-        y = df[plot_config["Symbol_Y"][0]]
-        z = df[plot_config["Symbol_Z"][0]]
+        x = dataframe[plot_config["Symbol_X"][0]]
+        y = dataframe[plot_config["Symbol_Y"][0]]
+        z = dataframe[plot_config["Symbol_Z"][0]]
 
         if plot_config["Chart_Type"][0] != '3D Scatter':
     

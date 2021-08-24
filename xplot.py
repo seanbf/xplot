@@ -1,3 +1,4 @@
+from typing import Container
 import streamlit as st
 import pandas as pd
 
@@ -42,8 +43,6 @@ radio_2d_3d         = st.sidebar.radio('', ['2D Plot','3D Plot'], key="2Dor3D")
 
 trace = view_2d_or_3d(radio_2d_3d)
 
-
-
 if radio_2d_3d == '3D Plot':
     trace["Chart_Type"], trace["Fill_Value"], trace["Interp_Method"], trace["Grid_Res"], color_palette  = plot_config_3d(radio_2d_3d, trace)
 else:
@@ -54,8 +53,9 @@ uploaded_file = st.sidebar.file_uploader(label="",
                                                  type=['csv', 'xlsx'])
 
 if uploaded_file is None:
-    st.sidebar.warning("Please Upload File Above")
-    
+    st.warning("Please upload file(s) in the sidebar")
+    st.stop()
+
 elif uploaded_file is not None:
 
     dataframe, columns = load_dataframe(uploaded_file=uploaded_file)
@@ -83,23 +83,21 @@ elif uploaded_file is not None:
 
 plotted_data        = pd.DataFrame()
 plot_sum            = []
-
-# Generate
-
-
 plot_config     = pd.DataFrame(trace)
 
 if radio_2d_3d == '2D Plot':
     plot_config     = plot_config[plot_config["Symbol"]!='Not Selected']
     plot_config.reset_index(inplace=True)
+
     plot = plot_2D(dataframe, plot_config, plotted_data, symbol_0)
+
 else:
     plot = plot_3D(dataframe, plot_config, color_palette)
 
+st.plotly_chart(plot, use_container_width=True, config=toolbar)
 checkbox_raw = st.checkbox(label= "Display Raw Data as Table", key="Raw_Data")
 checkbox_plotted = st.checkbox(label= "Display Plotted Data as Table", key="Plotted_Data")
-
-st.plotly_chart(plot, use_container_width=True, config=toolbar)
+plotted_analysis_simple(dataframe, plot_config)
 
 if checkbox_plotted == True:
     plotted_data_display(dataframe, plot_config)
