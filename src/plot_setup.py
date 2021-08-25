@@ -24,12 +24,8 @@ def trace_dict(toggle):
         trace["Extra_Signals"]  = 0
 
     elif toggle == "3D Plot":
-        trace["Symbol_X"]       = []
-        trace["Symbol_Y"]       = []
-        trace["Symbol_Z"]       = []
-        trace["Name_X"]         = []
-        trace["Name_Y"]         = []
-        trace["Name_Z"]         = []
+        trace["Symbol"]         = []
+        trace["Name"]           = []
         trace["Chart_Type"]     = []
         trace["Fill_Value"]     = []
         trace["Interp_Method"]  = []
@@ -81,6 +77,7 @@ def get_name(renamed_name,symbol_name):
         Name = renamed_name
     return Name
 
+@st.cache
 def get_y_axis(y_axis):
     ''' 
     Get name of signal or new name, input by user.
@@ -94,6 +91,7 @@ def get_y_axis(y_axis):
 
     return y_axis_plot 
 
+@st.cache
 def get_y_axis_config(plot_config):
     ''' 
     Get configuration for y axis / subplot
@@ -138,10 +136,7 @@ def get_y_axis_config(plot_config):
 
 @st.cache
 def get_subplot(Subplot):
-    '''
-    Determine subplots
-    '''
-    
+            # Determine subplots
     if Subplot == "Subplot 1":
         subplot = 2
         plotheight = 900

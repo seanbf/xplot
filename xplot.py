@@ -6,7 +6,7 @@ from src.functions import y_functions_dict
 from src.layout import plotly_toolbar_config, view_2d_or_3d, plot_config_3d, plot_config_2d,  signal_container_3d, signal_container_2d
 from src.plotter import plot_2D, plot_3D
 from src.plot_setup import get_markers
-from src.utils import load_dataframe, plotted_analysis_simple, raw_data_display, plotted_data_display
+from src.utils import load_dataframe, plotted_analysis_simple_2d, plotted_analysis_simple_3d, raw_data_display, plotted_data_display
 
 page_config = st.set_page_config  (
                 page_title              ="xPlot", 
@@ -46,14 +46,14 @@ trace = view_2d_or_3d(radio_2d_3d)
 if radio_2d_3d == '3D Plot':
     trace["Chart_Type"], trace["Fill_Value"], trace["Interp_Method"], trace["Grid_Res"], color_palette  = plot_config_3d(radio_2d_3d, trace)
 else:
-    color_palette, extra_signals  = plot_config_2d(radio_2d_3d)
+    trace["Extra_Signals"], color_palette  = plot_config_2d(trace, radio_2d_3d)
    
 uploaded_file = st.sidebar.file_uploader(label="",
                                                  accept_multiple_files=False,
                                                  type=['csv', 'xlsx'])
 
 if uploaded_file is None:
-    st.warning("Please upload file(s) in the sidebar")
+    st.info("Please upload file(s) in the sidebar")
     st.stop()
 
 elif uploaded_file is not None:
@@ -73,7 +73,7 @@ elif uploaded_file is not None:
     # 3D Trace Configuration
     if radio_2d_3d == '3D Plot':
         
-        trace["Symbol_X"], trace["Symbol_Y"], trace["Symbol_Z"], trace["Name_X"], trace["Name_Y"], trace["Name_Z"] = signal_container_3d(trace, symbols)
+        trace["Symbol"],trace["Name"] = signal_container_3d(trace, symbols)
         
     # 2D Trace Configuration
     elif radio_2d_3d == '2D Plot':
@@ -89,15 +89,26 @@ if radio_2d_3d == '2D Plot':
     plot_config     = plot_config[plot_config["Symbol"]!='Not Selected']
     plot_config.reset_index(inplace=True)
 
+    if len(plot_config["Plot_row"]) == 0:
+        st.info("Select an <X-axis> symbol and at least one <Y-axis> symbol")
+        st.stop()
     plot = plot_2D(dataframe, plot_config, plotted_data, symbol_0)
 
 else:
+    st.write(plot_config["Symbol"])
+    if (plot_config["Symbol"][0] == 'Not Selected') or (plot_config["Symbol"][1] == 'Not Selected') or (plot_config["Symbol"][2] == 'Not Selected'):
+        st.info("Select an <X-axis> symbol, <Y-axis> symbol and <Z-axis> symbol")
+        st.stop()
+
     plot = plot_3D(dataframe, plot_config, color_palette)
 
 st.plotly_chart(plot, use_container_width=True, config=toolbar)
 checkbox_raw = st.checkbox(label= "Display Raw Data as Table", key="Raw_Data")
 checkbox_plotted = st.checkbox(label= "Display Plotted Data as Table", key="Plotted_Data")
-plotted_analysis_simple(dataframe, plot_config)
+if radio_2d_3d == '2D Plot':
+    plotted_analysis_simple_2d(dataframe, plot_config)
+else:
+    plotted_analysis_simple_3d(dataframe, plot_config)
 
 if checkbox_plotted == True:
     plotted_data_display(dataframe, plot_config)

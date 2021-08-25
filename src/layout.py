@@ -78,7 +78,7 @@ def plot_config_3d(radio_2d_3d, trace):
 
     return trace["Chart_Type"], trace["Fill_Value"], trace["Interp_Method"], trace["Grid_Res"], color_palette
 
-def plot_config_2d(radio_2d_3d):
+def plot_config_2d(trace, radio_2d_3d):
     with st.expander("2D Plot Configuration", expanded=True):
         col_choice, col_extra_signals, col_show = st.columns((1,1,3))
         qualitive_color_sets_dict       = qualitive_color_dict()
@@ -89,28 +89,27 @@ def plot_config_2d(radio_2d_3d):
     
         col_show.plotly_chart(plot_color_set(color_palette, color_set, radio_2d_3d), config = dict({'staticPlot' : True}))
 
-        extra_signals = col_extra_signals.number_input("Extra Signals", min_value=0, max_value=30, value=0, step=1, help = "Generate extra signal containers, useful if your comparing signals with functions applied")
+        trace["Extra_Signals"] = col_extra_signals.number_input("Extra Signals", min_value=0, max_value=30, value=0, step=1, help = "Generate extra signal containers, useful if your comparing signals with functions applied")
 
-    return color_palette, extra_signals
+    return trace["Extra_Signals"], color_palette
 
 def signal_container_3d(trace, symbols):
     '''
     Generate containers for 3d plot.
     '''
-    
-    with st.sidebar.expander("X", expanded=True):
-        trace["Symbol_X"].append(st.selectbox("Symbol", symbols, key="Symbol_X"))
-        trace["Name_X"].append(st.text_input("Rename Symbol", "", key="Name_X"))
+    for i in range(0, 3):
+        if i == 0:
+            Axis = 'X'
+        elif i == 1:
+            Axis = 'Y'
+        elif i == 2:
+            Axis = 'Z'
 
-    with st.sidebar.expander("Y", expanded=True):
-        trace["Symbol_Y"].append(st.selectbox("Symbol", symbols, key="Symbol_Y"))
-        trace["Name_Y"].append(st.text_input("Rename Symbol", "", key="Name_Y"))
-        
-    with st.sidebar.expander("Z", expanded=True):
-        trace["Symbol_Z"].append(st.selectbox("Symbol", symbols, key="Symbol_Z"))
-        trace["Name_Z"].append(st.text_input("Rename Symbol", "", key="Name_Z"))
+        with st.sidebar.expander(Axis + " Axis", expanded=True):
+            trace["Symbol"].append(st.selectbox("Symbol " + str(Axis), symbols, key="Symbol_"+str(Axis)))
+            trace["Name"].append(st.text_input("Rename Symbol " + str(Axis), "", key="Name_"+str(Axis)))
 
-    return trace["Symbol_X"], trace["Symbol_Y"], trace["Symbol_Z"], trace["Name_X"], trace["Name_Y"], trace["Name_Z"]
+    return trace["Symbol"], trace["Name"]
 
 def signal_container_2d(trace, symbols, color_palette, marker_names, y_function_names):
 
@@ -124,7 +123,7 @@ def signal_container_2d(trace, symbols, color_palette, marker_names, y_function_
 
         total_signals = 6
         color_counter = 0
-
+        
         if trace["Extra_Signals"] > 0:
             total_signals = total_signals + trace["Extra_Signals"]
 
