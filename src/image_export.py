@@ -1,66 +1,70 @@
 from base64 import b64encode
 import io
 import streamlit as st
+from datetime import datetime
 
+def export_name(col_export_name, col_datetime):
+    output_name = col_export_name.text_input(label="Export Name: ")
+    if output_name == '':
+        output_name = "exported_chart"
 
-@st.cache
-def download_chart(plot, output_format):
-    """
+    output_datetime = col_datetime.checkbox(label="Include Date Time?")
+    if output_datetime == True:
+        export_datetime = "_" + str("{:%Y_%m_%d_%H_%M_%S}".format(datetime.now()))
+    else:
+        export_datetime = ''
 
-    :param plot: plotly figure
-    :param output_format: str, the required output format in string
-    :return:
-    """
+    file_name = str(output_name) + str(export_datetime)
+    return file_name
 
-    file_name_with_extension = 'image1' + output_format
+def show_export_format(col_export_format):          
+    output_format = col_export_format.selectbox(label='Select download format', options=['.html', '.jpeg','.png', '.pdf', '.svg','.json'], help="some formats will need orca installed")
+    return output_format
 
-    if output_format == '.html':
-        buffer = io.StringIO()
-        plot.write_html(buffer)
-        html_bytes = buffer.getvalue().encode()
-        encoding = b64encode(html_bytes).decode()
+def download_chart(plot, output_format, file_name, col_export_link):
+    with st.spinner("Generating File to Export.."):
+        """
+        Convert chart to file to be exported and provide download link.
+        """
 
-        href = f'<a download={file_name_with_extension} href="data:file/html;base64,{encoding}" >Download</a>'
+        file_name_with_extension = file_name + output_format
 
-    if output_format == '.json':
-        img_bytes = plot.to_image(format='json')
-        encoding = b64encode(img_bytes).decode()
+        if output_format == '.html':
+            buffer = io.StringIO()
+            plot.write_html(buffer)
+            html_bytes = buffer.getvalue().encode()
+            encoding = b64encode(html_bytes).decode()
 
-        href = f'<a download={file_name_with_extension} href="data:file/json;base64,{encoding}" >Download</a>'
+            href = f'<a download={file_name_with_extension} href="data:file/html;base64,{encoding}" >Download</a>'
 
-    if output_format == '.png':
-        img_bytes = plot.to_image(format='png')
-        encoding = b64encode(img_bytes).decode()
+        if output_format == '.json':
+            img_bytes = plot.to_image(format='json')
+            encoding = b64encode(img_bytes).decode()
 
-        href = f'<a download={file_name_with_extension} href="data:image/png;base64,{encoding}" >Download</a>'
+            href = f'<a download={file_name_with_extension} href="data:file/json;base64,{encoding}" >Download</a>'
 
-    if output_format == '.jpeg':
-        img_bytes = plot.to_image(format='jpg')
-        encoding = b64encode(img_bytes).decode()
+        if output_format == '.png':
+            img_bytes = plot.to_image(format='png')
+            encoding = b64encode(img_bytes).decode()
 
-        href = f'<a download={file_name_with_extension} href="data:image/jpeg;base64,{encoding}" >Download</a>'
+            href = f'<a download={file_name_with_extension} href="data:image/png;base64,{encoding}" >Download</a>'
 
-    if output_format == '.svg':
-        img_bytes = plot.to_image(format='svg')
-        encoding = b64encode(img_bytes).decode()
+        if output_format == '.jpeg':
+            img_bytes = plot.to_image(format='jpg')
+            encoding = b64encode(img_bytes).decode()
 
-        href = f'<a download={file_name_with_extension} href="data:image/svg;base64,{encoding}" >Download</a>'
+            href = f'<a download={file_name_with_extension} href="data:image/jpeg;base64,{encoding}" >Download</a>'
 
-    if output_format == '.pdf':
-        img_bytes = plot.to_image(format='pdf')
-        encoding = b64encode(img_bytes).decode()
+        if output_format == '.svg':
+            img_bytes = plot.to_image(format='svg')
+            encoding = b64encode(img_bytes).decode()
 
-        href = f'<a download={file_name_with_extension} href="data:file/pdf;base64,{encoding}" >Download</a>'
+            href = f'<a download={file_name_with_extension} href="data:image/svg;base64,{encoding}" >Download</a>'
 
-    return href
+        if output_format == '.pdf':
+            img_bytes = plot.to_image(format='pdf')
+            encoding = b64encode(img_bytes).decode()
 
+            href = f'<a download={file_name_with_extension} href="data:file/pdf;base64,{encoding}" >Download</a>'
 
-def show_export_format(plot):
-    try:
-        st.subheader('Export image')
-        output_format = st.selectbox(label='Select download format', options=['.png', '.jpeg', '.pdf', '.svg',
-                                                                              '.html', '.json'])
-        href = download_chart(plot, output_format=output_format)
-        st.markdown(href, unsafe_allow_html=True)
-    except Exception as e:
-        print(e)
+        return col_export_link.markdown(href, unsafe_allow_html=True)

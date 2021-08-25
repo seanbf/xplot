@@ -134,9 +134,9 @@ def signal_container_2d(trace, symbols, color_palette, marker_names, y_function_
             else:
                 expand_contaner = False
 
-            if color_counter > len(color_palette):
+            if color_counter >= len(color_palette):
                 color_counter = 0
-
+            
             with st.sidebar.expander("Signal "+str(available_symbols), expanded=expand_contaner):
                 # Symbol
                 trace["Symbol"].append(st.selectbox("Symbol", symbols, key="symbol_"+str(available_symbols)))
@@ -154,7 +154,7 @@ def signal_container_2d(trace, symbols, color_palette, marker_names, y_function_
                 # Y Axis
                 trace["Axis"].append(col_axis.radio('Axis', ['y1','y2'], key="axis_"+str(available_symbols)))
                 # Color
-                trace["Color"].append(col_color.color_picker('Pick a color ',color_palette[color_counter],help="(Default:"+color_palette[color_counter]+")", key="color_"+str(available_symbols)))
+                trace["Color"].append(col_color.color_picker('Pick a color ',color_palette[color_counter],help="(Default: "+color_palette[color_counter]+")", key="color_"+str(available_symbols)))
                 # Subplot
                 trace["Plot_row"].append(col_subplot.selectbox("Subplot",["Main Plot","Subplot 1","Subplot 2"], key="subplot_"+str(available_symbols)))
 

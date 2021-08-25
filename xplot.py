@@ -7,6 +7,8 @@ from src.layout import plotly_toolbar_config, view_2d_or_3d, plot_config_3d, plo
 from src.plotter import plot_2D, plot_3D
 from src.plot_setup import get_markers
 from src.utils import load_dataframe, plotted_analysis_simple_2d, plotted_analysis_simple_3d, raw_data_display, plotted_data_display
+from src.image_export import show_export_format, export_name, download_chart
+from datetime import datetime   
 
 page_config = st.set_page_config  (
                 page_title              ="xPlot", 
@@ -103,12 +105,23 @@ else:
     plot = plot_3D(dataframe, plot_config, color_palette)
 
 st.plotly_chart(plot, use_container_width=True, config=toolbar)
-checkbox_raw = st.checkbox(label= "Display Raw Data as Table", key="Raw_Data")
-checkbox_plotted = st.checkbox(label= "Display Plotted Data as Table", key="Plotted_Data")
+
 if radio_2d_3d == '2D Plot':
     plotted_analysis_simple_2d(dataframe, plot_config)
 else:
     plotted_analysis_simple_3d(dataframe, plot_config)
+
+st.subheader('Export Chart')
+col_export_name,col_export_format, col_datetime, col_generate_link, col_export_link = st.columns(5)
+file_name       = export_name(col_export_name, col_datetime)
+export_format   = show_export_format(col_export_format)
+
+if col_generate_link.button("Generate File") == True:
+    download_chart(plot, export_format, file_name, col_export_link )
+
+checkbox_raw = st.checkbox(label= "Display Raw Data as Table", key="Raw_Data")
+checkbox_plotted = st.checkbox(label= "Display Plotted Data as Table", key="Plotted_Data")
+
 
 if checkbox_plotted == True:
     plotted_data_display(dataframe, plot_config)

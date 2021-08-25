@@ -23,29 +23,35 @@ def plotted_analysis_simple_2d(dataframe, plot_config):
     '''
     Summary table
     '''
+
+    
     with st.spinner("Calculating Summary Table"):
         plot_summary = pd.DataFrame(columns=['Symbol','Name','Min','Mean','Max'])
 
         for row in range(0,len(plot_config)):
             if plot_config["Symbol"][row] != "Not Selected":
-                if plot_config["Hex_rep"][row] == False:
-                    plot_summary = plot_summary.append({
-                                                            'Symbol'    :plot_config["Symbol"][row],
-                                                            'Name'      :plot_config["Name"][row],
-                                                            'Min'       : min(dataframe[plot_config["Symbol"][row]]),
-                                                            'Mean'      : np.mean(dataframe[plot_config["Symbol"][row]]),
-                                                            'Max'       : max(dataframe[plot_config["Symbol"][row]])
-                                                            },
-                                                            ignore_index=True)               
-                else:
-                    plot_summary = plot_summary.append({
-                                                            'Symbol'    : plot_config["Symbol"][row],
-                                                            'Name'      : plot_config["Name"][row],
-                                                            'Min'       : str(min(dataframe[plot_config["Symbol"][row]]))       + " (" + str(hex(int(min(dataframe[plot_config["Symbol"][row]]))))       + ")",
-                                                            'Mean'      : str(np.mean(dataframe[plot_config["Symbol"][row]]))   + " (" + str(float.hex(np.mean(dataframe[plot_config["Symbol"][row]])))   + ")",
-                                                            'Max'       : str(max(dataframe[plot_config["Symbol"][row]]))       + " (" + str(hex(int(max(dataframe[plot_config["Symbol"][row]]))))       + ")"
-                                                            },
-                                                            ignore_index=True)
+                #if plot_config["Hex_rep"][row] == True:
+                #    st.write("true: "+str(plot_config["Hex_rep"][row]))
+                #    plot_summary = plot_summary.append({
+                #                                            'Symbol'    : plot_config["Symbol"][row],
+                #                                            'Name'      : plot_config["Name"][row],
+                #                                            'Min'       : str(min(dataframe[plot_config["Symbol"][row]]))       + " (" + str( hex ( int( min(dataframe[plot_config["Symbol"][row]]) ) ) )     + ")",
+                #                                            'Mean'      : str(np.mean(dataframe[plot_config["Symbol"][row]]))   + " (" + str( float.hex(np.mean(dataframe[plot_config["Symbol"][row]])))   + ")",
+                #                                            'Max'       : str(max(dataframe[plot_config["Symbol"][row]]))       + " (" + str( hex(int(max(dataframe[plot_config["Symbol"][row]]))))       + ")"
+                #                                            },
+                #                                            ignore_index=True)
+
+                
+                    
+                plot_summary = plot_summary.append({
+                                                        'Symbol'    : plot_config["Symbol"][row],
+                                                        'Name'      : plot_config["Name"][row],
+                                                        'Min'       : min(dataframe[plot_config["Symbol"][row]]),
+                                                        'Mean'      : np.mean(dataframe[plot_config["Symbol"][row]]),
+                                                        'Max'       : max(dataframe[plot_config["Symbol"][row]])
+                                                        },
+                                                        ignore_index=True)               
+
 
     return st.subheader("Quick Analysis"), st.write(plot_summary)
 
