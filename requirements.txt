@@ -3,3 +3,4 @@ pandas
 plotly
 palettable
 scipy
+kaleido
