@@ -1,5 +1,5 @@
-python -m pip install numpy
-python -m pip install pandas
-python -m pip install plotly
-python -m pip install palettable
-python -m pip install scipy
+numpy
+pandas
+plotly
+palettable
+scipy
