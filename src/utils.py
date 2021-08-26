@@ -54,7 +54,7 @@ def plotted_analysis_simple_2d(dataframe, plot_config):
                                                         ignore_index=True)               
 
 
-    return st.subheader("Quick Analysis"), st.write(plot_summary)
+    return plot_summary
 
 def plotted_analysis_simple_3d(dataframe, plot_config):
     '''
@@ -74,17 +74,17 @@ def plotted_analysis_simple_3d(dataframe, plot_config):
                                                             ignore_index=True)               
 
 
-    return st.subheader("Quick Analysis"), st.write(plot_summary)
+    return plot_summary
 
 
-def raw_data_display(dataframe):
+def raw_data(dataframe):
     '''
     Display Raw Data as table
     '''
     with st.spinner("Loading Raw Data as Table"):
-        return st.subheader("Raw Data"), st.write(dataframe)
+        return dataframe
 
-def plotted_data_display(dataframe, plot_config):
+def plotted_data(dataframe, plot_config):
     '''
     Display Plotted Data as table
     '''
@@ -95,7 +95,7 @@ def plotted_data_display(dataframe, plot_config):
         for rows in range(0,len(plot_config)):
             plotted_data[plot_config["Symbol"][rows]] = (dataframe[plot_config["Symbol"][rows]])
 
-    return st.subheader("Plotted Data"), st.write(plotted_data)
+    return plotted_data
 
 def z_col_or_grid(dataframe, plot_config):
     '''
@@ -118,7 +118,7 @@ def z_col_or_grid(dataframe, plot_config):
 
     return x, y, z
 
-def plotted_data_display_3d(x, y , z, plot_config):
+def plotted_data_3d(x, y , z, plot_config):
     '''
     Display data plotted 3d graph in correct format.
     '''
@@ -131,4 +131,4 @@ def plotted_data_display_3d(x, y , z, plot_config):
         table_3d.columns = [x]
         table_3d.index = [y]
         table_3d = table_3d.sort_index(ascending=False)
-    return st.write(table_3d)
+    return table_3d

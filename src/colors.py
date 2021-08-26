@@ -132,11 +132,12 @@ def plot_color_set(color_palaette, color_set, is_three_d):
                     layout = dict   (
                                     xaxis           = dict(showticklabels=False, showgrid=False, fixedrange = False, visible=False),
                                     yaxis           = dict(showticklabels=False, showgrid=False, fixedrange = False, visible=False),
-                                    height          = 80    ,
-                                    width           = 100,
+                                    height          = 80,
+                                    width           = 200,
                                     margin          = dict(l=0,r=0,b=0,t=29),
                                     paper_bgcolor   = 'rgba(0,0,0,0)',
                                     plot_bgcolor    = 'rgba(0,0,0,0)'
                                     ),
                     )
+    fig = fig.to_image(format="png", width=200, height=60)
     return fig

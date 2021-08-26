@@ -2,15 +2,14 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
-from plotly.validators.scatter.marker import SymbolValidator
 
 from plotly.subplots import make_subplots
 from src.functions import y_functions_dict
 from src.plot_setup import get_y_axis, get_hovertip, get_name, get_subplot, get_y_axis_config
 
 @st.cache
-def plot_2D(dataframe, plot_config, plotted_data, symbol_0):
-           
+def plot_2D(dataframe, plot_config, symbol_0):
+    plotted_data = pd.DataFrame()       
     with st.spinner('Generating Interactive Plot'):
         y_axis_config = get_y_axis_config(plot_config)
 
@@ -144,7 +143,7 @@ def plot_2D(dataframe, plot_config, plotted_data, symbol_0):
     return plot
 
 @st.cache
-def plot_3D(x, y, z, dataframe, plot_config, color_palette, overlay):
+def plot_3D(x, y, z, dataframe, plot_config, color_palette, overlay, overlay_alpha, overlay_marker, overlay_color):
 
     with st.spinner("Generating 3D Plot"):
 
@@ -242,11 +241,12 @@ def plot_3D(x, y, z, dataframe, plot_config, color_palette, overlay):
             plot_3D.add_trace	(go.Scatter (  
                             x       		= dataframe[plot_config["Symbol"][0]],
                             y       		= dataframe[plot_config["Symbol"][1]],
-                            name 			= 'Original Data',
+                            name 			= "X: "  + str(dataframe[plot_config["Symbol"][0]]) + "Y: "  + str(dataframe[plot_config["Symbol"][1]]),
                             mode            = 'markers',
+                            opacity         = overlay_alpha,
                             marker          = dict  (
-                                                    color   = 'black', 
-                                                    symbol  = 'circle'
+                                                    color   = overlay_color, 
+                                                    symbol  = overlay_marker
                                                     ),
                             ),     
                 )

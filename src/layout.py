@@ -1,7 +1,7 @@
 import streamlit as st
-from src.utils import load_dataframe
 from src.plot_setup import trace_dict
 from src.colors import sequential_color_dict, diverging_color_dict, plot_color_set, qualitive_color_dict
+from PIL import Image
 
 def plotly_toolbar_config():
     # PLOTLY TOOLBAR/ BEHAVIOUR
@@ -35,15 +35,15 @@ def view_2d_or_3d(radio_2d_3d):
     
     return trace
 
-def plot_config_3d(radio_2d_3d, trace):
+def plot_config_3d(radio_2d_3d, trace, marker_names):
     """
     Container to configure 3D plot, i.e colormapping
     """
 
     if radio_2d_3d == "3D Plot":
         with st.expander("3D Plot Configuration", expanded=True):
-            col_plot_type, col_grid_res, col_fill, col_interp, col_col_type, col_choice, col_preview = st.columns(7)
-
+            col_plot_type, col_grid_res, col_fill, col_interp = st.columns(4)
+            col_col_type, col_choice, col_preview, col_overlay = st.columns(4)
             trace["Chart_Type"] = col_plot_type.selectbox("Plot Type", ["Contour","3D Scatter","Surface","Heatmap"])
             color_set_type = col_col_type.selectbox('Color Map Type', ['Sequential','Diverging'], key="coltype")
 
@@ -58,7 +58,9 @@ def plot_config_3d(radio_2d_3d, trace):
             else:
                 color_palette = diverging_color_dict().get(color_set)
 
-            col_preview.plotly_chart(plot_color_set(color_palette, color_set, radio_2d_3d), config = dict({'staticPlot' : True}))
+            colormap_preview = plot_color_set(color_palette, color_set, radio_2d_3d)
+            col_preview.image(colormap_preview, use_column_width = True)
+
             if trace["Chart_Type"] != '3D Scatter':
                 trace["Grid_Res"] = col_grid_res.number_input("Grid Resolution", min_value=0.0, max_value=100000.0, value=50.0, step=0.5, key="Grid_Res")
                 trace["Fill_Value"] = col_fill.selectbox("Fill Value", ["nan",0], help="fill missing data with the selected value")
@@ -68,10 +70,18 @@ def plot_config_3d(radio_2d_3d, trace):
                 trace["Fill_Value"] = None
                 trace["Interp_Method"] = None
                 trace["Grid_Res"] = None
-
-            if trace["Chart_Type"] == 'Contour':
-                overlay = st.checkbox("Overlay Original Data", help="Display scatter of original data over the top of the contour")
-
+            
+            overlay = col_overlay.checkbox("Overlay Original Data", help="Display scatter of original data overlayed on chart")
+            
+            if overlay == True:
+                col_overlay_alpha, col_overlay_marker, col_overlay_color = st.columns(3)
+                overlay_alpha = col_overlay_alpha.slider("Opacity",value=0.5,min_value=0.0, max_value=1.0, step=0.01)
+                overlay_marker = col_overlay_marker.selectbox("Style", marker_names, help="https://plotly.com/python/marker-style/")
+                overlay_color = col_overlay_color.color_picker('Pick a color ', '#000000')
+            else:
+                overlay_alpha = None
+                overlay_marker = None
+                overlay_color = None
     else:
         trace["Chart_Type"] = None
         color_palette = None
@@ -80,18 +90,20 @@ def plot_config_3d(radio_2d_3d, trace):
         trace["Grid_Res"] = None
 
 
-    return trace["Chart_Type"], trace["Fill_Value"], trace["Interp_Method"], trace["Grid_Res"], color_palette, overlay
+
+    return trace["Chart_Type"], trace["Fill_Value"], trace["Interp_Method"], trace["Grid_Res"], color_palette, overlay, overlay_alpha, overlay_marker, overlay_color
 
 def plot_config_2d(trace, radio_2d_3d):
     with st.expander("2D Plot Configuration", expanded=True):
-        col_choice, col_extra_signals, col_show = st.columns((1,1,3))
+        col_choice, col_extra_signals, col_preview, col_placeholder = st.columns(4)
         qualitive_color_sets_dict       = qualitive_color_dict()
         qualitive_color_sets_names      = list(qualitive_color_sets_dict.keys())
         color_set = col_choice.selectbox("Color Palette",qualitive_color_sets_names, key='color_set', help = "Recommended: Light Theme use Plotly, Dark Theme use Pastel" )
        
         color_palette = qualitive_color_sets_dict.get(color_set)
     
-        col_show.plotly_chart(plot_color_set(color_palette, color_set, radio_2d_3d), config = dict({'staticPlot' : True}))
+        colormap_preview = plot_color_set(color_palette, color_set, radio_2d_3d)
+        col_preview.image(colormap_preview, use_column_width = True)
 
         trace["Extra_Signals"] = col_extra_signals.number_input("Extra Signals", min_value=0, max_value=30, value=0, step=1, help = "Generate extra signal containers, useful if your comparing signals with functions applied")
 
