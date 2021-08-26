@@ -47,27 +47,30 @@ def plot_config_3d(radio_2d_3d, trace):
             trace["Chart_Type"] = col_plot_type.selectbox("Plot Type", ["Contour","3D Scatter","Surface","Heatmap"])
             color_set_type = col_col_type.selectbox('Color Map Type', ['Sequential','Diverging'], key="coltype")
 
-        if color_set_type == 'Sequential':
-            color_map = list(sequential_color_dict().keys())
-        else:
-            color_map = list(diverging_color_dict().keys())
+            if color_set_type == 'Sequential':
+                color_map = list(sequential_color_dict().keys())
+            else:
+                color_map = list(diverging_color_dict().keys())
 
-        color_set   = col_choice.selectbox("Color Map", color_map)  
-        if color_set_type == 'Sequential':
-            color_palette = sequential_color_dict().get(color_set)
-        else:
-            color_palette = diverging_color_dict().get(color_set)
+            color_set   = col_choice.selectbox("Color Map", color_map)  
+            if color_set_type == 'Sequential':
+                color_palette = sequential_color_dict().get(color_set)
+            else:
+                color_palette = diverging_color_dict().get(color_set)
 
-        col_preview.plotly_chart(plot_color_set(color_palette, color_set, radio_2d_3d), config = dict({'staticPlot' : True}))
-        if trace["Chart_Type"] != '3D Scatter':
-            trace["Grid_Res"] = col_grid_res.number_input("Grid Resolution", min_value=0.0, max_value=100000.0, value=50.0, step=0.5, key="Grid_Res")
-            trace["Fill_Value"] = col_fill.selectbox("Fill Value", ["nan",0], help="fill missing data with the selected value")
-            trace["Interp_Method"] = col_interp.selectbox("Interpolation Method", ["linear","nearest","cubic"])
-            
-        else:
-            trace["Fill_Value"] = None
-            trace["Interp_Method"] = None
-            trace["Grid_Res"] = None
+            col_preview.plotly_chart(plot_color_set(color_palette, color_set, radio_2d_3d), config = dict({'staticPlot' : True}))
+            if trace["Chart_Type"] != '3D Scatter':
+                trace["Grid_Res"] = col_grid_res.number_input("Grid Resolution", min_value=0.0, max_value=100000.0, value=50.0, step=0.5, key="Grid_Res")
+                trace["Fill_Value"] = col_fill.selectbox("Fill Value", ["nan",0], help="fill missing data with the selected value")
+                trace["Interp_Method"] = col_interp.selectbox("Interpolation Method", ["linear","nearest","cubic"])
+
+            else:
+                trace["Fill_Value"] = None
+                trace["Interp_Method"] = None
+                trace["Grid_Res"] = None
+
+            if trace["Chart_Type"] == 'Contour':
+                overlay = st.checkbox("Overlay Original Data", help="Display scatter of original data over the top of the contour")
 
     else:
         trace["Chart_Type"] = None
@@ -76,7 +79,8 @@ def plot_config_3d(radio_2d_3d, trace):
         trace["Interp_Method"] = None
         trace["Grid_Res"] = None
 
-    return trace["Chart_Type"], trace["Fill_Value"], trace["Interp_Method"], trace["Grid_Res"], color_palette
+
+    return trace["Chart_Type"], trace["Fill_Value"], trace["Interp_Method"], trace["Grid_Res"], color_palette, overlay
 
 def plot_config_2d(trace, radio_2d_3d):
     with st.expander("2D Plot Configuration", expanded=True):

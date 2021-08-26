@@ -6,9 +6,8 @@ from src.functions import y_functions_dict
 from src.layout import plotly_toolbar_config, view_2d_or_3d, plot_config_3d, plot_config_2d,  signal_container_3d, signal_container_2d
 from src.plotter import plot_2D, plot_3D
 from src.plot_setup import get_markers
-from src.utils import load_dataframe, plotted_analysis_simple_2d, plotted_analysis_simple_3d, raw_data_display, plotted_data_display
+from src.utils import load_dataframe, plotted_analysis_simple_2d, plotted_analysis_simple_3d, raw_data_display, plotted_data_display, z_col_or_grid, plotted_data_display_3d
 from src.image_export import show_export_format, export_name, download_chart
-from datetime import datetime   
 
 page_config = st.set_page_config  (
                 page_title              ="xPlot", 
@@ -31,11 +30,11 @@ st.markdown(
     """
     <style>
     [data-testid="stSidebar"][aria-expanded="true"] > div:first-child {
-        width: 650px;
+        width: 600px;
     }
     [data-testid="stSidebar"][aria-expanded="false"] > div:first-child {
-        width: 650px;
-        margin-left: -650px;
+        width: 600px;
+        margin-left: -600px;
     }   
     </style>
     """,
@@ -46,7 +45,7 @@ radio_2d_3d         = st.sidebar.radio('', ['2D Plot','3D Plot'], key="2Dor3D")
 trace = view_2d_or_3d(radio_2d_3d)
 
 if radio_2d_3d == '3D Plot':
-    trace["Chart_Type"], trace["Fill_Value"], trace["Interp_Method"], trace["Grid_Res"], color_palette  = plot_config_3d(radio_2d_3d, trace)
+    trace["Chart_Type"], trace["Fill_Value"], trace["Interp_Method"], trace["Grid_Res"], color_palette, overlay  = plot_config_3d(radio_2d_3d, trace)
 else:
     trace["Extra_Signals"], color_palette  = plot_config_2d(trace, radio_2d_3d)
    
@@ -97,12 +96,12 @@ if radio_2d_3d == '2D Plot':
     plot = plot_2D(dataframe, plot_config, plotted_data, symbol_0)
 
 else:
-    st.write(plot_config["Symbol"])
     if (plot_config["Symbol"][0] == 'Not Selected') or (plot_config["Symbol"][1] == 'Not Selected') or (plot_config["Symbol"][2] == 'Not Selected'):
         st.info("Select an <X-axis> symbol, <Y-axis> symbol and <Z-axis> symbol")
         st.stop()
 
-    plot = plot_3D(dataframe, plot_config, color_palette)
+    x, y, z = z_col_or_grid(dataframe, plot_config)
+    plot = plot_3D(x, y, z,dataframe, plot_config, color_palette, overlay)
 
 st.plotly_chart(plot, use_container_width=True, config=toolbar)
 
@@ -111,20 +110,23 @@ if radio_2d_3d == '2D Plot':
 else:
     plotted_analysis_simple_3d(dataframe, plot_config)
 
-st.subheader('Export Chart')
-col_export_name,col_export_format, col_datetime, col_generate_link, col_export_link = st.columns(5)
-file_name       = export_name(col_export_name, col_datetime)
-export_format   = show_export_format(col_export_format)
-
-if col_generate_link.button("Generate File") == True:
-    download_chart(plot, export_format, file_name, col_export_link )
 
 checkbox_raw = st.checkbox(label= "Display Raw Data as Table", key="Raw_Data")
 checkbox_plotted = st.checkbox(label= "Display Plotted Data as Table", key="Plotted_Data")
 
+with st.expander("Export", expanded=True):
+    col_export_name,col_export_format, col_datetime, col_generate_link, col_export_link = st.columns(5)
+    file_name       = export_name(col_export_name, col_datetime)
+    export_format   = show_export_format(col_export_format)
 
-if checkbox_plotted == True:
-    plotted_data_display(dataframe, plot_config)
+if col_generate_link.button("Generate File") == True:
+    download_chart(plot, export_format, file_name, col_export_link )
+
+if checkbox_plotted == True:   
+    if radio_2d_3d == '3D Plot':
+        plotted_data_display_3d(x,y,z,plot_config)
+    else:
+        plotted_data_display(dataframe, plot_config)
 
 if checkbox_raw == True:
     raw_data_display(dataframe)

@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import streamlit as st
+from scipy.interpolate import griddata
 
 @st.cache
 def load_dataframe(uploaded_file):
@@ -95,3 +96,39 @@ def plotted_data_display(dataframe, plot_config):
             plotted_data[plot_config["Symbol"][rows]] = (dataframe[plot_config["Symbol"][rows]])
 
     return st.subheader("Plotted Data"), st.write(plotted_data)
+
+def z_col_or_grid(dataframe, plot_config):
+    '''
+    Depending on graph wanted, format data as grid or columns
+    '''
+    x = dataframe[plot_config["Symbol"][0]]
+    y = dataframe[plot_config["Symbol"][1]]
+    z = dataframe[plot_config["Symbol"][2]]
+
+    if plot_config["Chart_Type"][0] != '3D Scatter':
+
+        xi = np.linspace( float(min(x)), float(max(x)), int(plot_config["Grid_Res"][0]) )
+        yi = np.linspace( float(min(y)), float(max(y)), int(plot_config["Grid_Res"][0]) )
+
+        X,Y = np.meshgrid(xi,yi)
+
+        z = griddata( (x,y),z,(X,Y), fill_value=plot_config["Fill_Value"][0], method='linear')  
+        x = xi
+        y = yi
+
+    return x, y, z
+
+def plotted_data_display_3d(x, y , z, plot_config):
+    '''
+    Display data plotted 3d graph in correct format.
+    '''
+    if plot_config["Chart_Type"][0] == '3D Scatter':
+        table_3d = pd.DataFrame([x,y,z])
+        table_3d.rename(columns={'x':str(plot_config["Symbol"][0]),'y':str(plot_config["Symbol"][1]),'z':str(plot_config["Symbol"][2])}, inplace = True)
+    else:
+        x = np.round(x, 4)
+        table_3d = pd.DataFrame(z)
+        table_3d.columns = [x]
+        table_3d.index = [y]
+        table_3d = table_3d.sort_index(ascending=False)
+    return st.write(table_3d)
