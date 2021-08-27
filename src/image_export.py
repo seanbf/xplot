@@ -4,6 +4,10 @@ import streamlit as st
 from datetime import datetime
 
 def export_name(col_export_name, col_datetime):
+    """
+    Export file name (and current datetime if requested)
+    """
+
     output_name = col_export_name.text_input(label="Export Name: ")
     if output_name == '':
         output_name = "exported_chart"
@@ -15,18 +19,24 @@ def export_name(col_export_name, col_datetime):
         export_datetime = ''
 
     file_name = str(output_name) + str(export_datetime)
+
     return file_name
 
-def show_export_format(col_export_format): 
+def show_export_format(col_export_format):
+    """
+    Dropdown of formats to export to.
+    """ 
     #options=['.html', '.jpeg','.png', '.pdf', '.svg','.json']         
     output_format = col_export_format.selectbox(label='Select download format', options=['.html'])
+
     return output_format
 
 def download_chart(plot, quick_analysis_result, include_plotted_data, include_raw_data, plotted_data, raw_data, output_format, file_name, col_export_link):
+    """
+    Convert chart to file to be exported and provide download link.
+    """
+    
     with st.spinner("Generating File to Export.."):
-        """
-        Convert chart to file to be exported and provide download link.
-        """
 
         file_name_with_extension = file_name + output_format
 
@@ -34,10 +44,13 @@ def download_chart(plot, quick_analysis_result, include_plotted_data, include_ra
             buffer = io.StringIO()
             plot.write_html(buffer)
             quick_analysis_result.to_html(buffer)
+
             if include_plotted_data == True:
                 plotted_data.to_html(buffer)
+
             if include_raw_data == True:
                 raw_data.to_html(buffer)
+
             html_bytes = buffer.getvalue().encode()
             encoding = b64encode(html_bytes).decode()
 
@@ -73,4 +86,4 @@ def download_chart(plot, quick_analysis_result, include_plotted_data, include_ra
 #
             href = f'<a download={file_name_with_extension} href="data:file/pdf;base64,{encoding}" >Download</a>'
 
-        return col_export_link.markdown(href, unsafe_allow_html=True)
+    return col_export_link.markdown(href, unsafe_allow_html=True)

@@ -20,7 +20,8 @@ def load_dataframe(uploaded_file):
 
     return dataframe, columns
 
-def plotted_analysis_simple_2d(dataframe, plot_config):
+@st.cache
+def plotted_analysis(dataframe, plot_config):
     '''
     Summary table
     '''
@@ -56,27 +57,7 @@ def plotted_analysis_simple_2d(dataframe, plot_config):
 
     return plot_summary
 
-def plotted_analysis_simple_3d(dataframe, plot_config):
-    '''
-    Summary table
-    '''
-    with st.spinner("Calculating Summary Table"):
-        plot_summary = pd.DataFrame(columns=['Symbol','Name','Min','Mean','Max'])
-
-        for row in range(0,3):
-                    plot_summary = plot_summary.append({
-                                                            'Symbol'    :plot_config["Symbol"][row],
-                                                            'Name'      :plot_config["Name"][row],
-                                                            'Min'       : min(dataframe[plot_config["Symbol"][row]]),
-                                                            'Mean'      : np.mean(dataframe[plot_config["Symbol"][row]]),
-                                                            'Max'       : max(dataframe[plot_config["Symbol"][row]])
-                                                            },
-                                                            ignore_index=True)               
-
-
-    return plot_summary
-
-
+@st.cache
 def raw_data(dataframe):
     '''
     Display Raw Data as table
@@ -84,6 +65,7 @@ def raw_data(dataframe):
     with st.spinner("Loading Raw Data as Table"):
         return dataframe
 
+@st.cache
 def plotted_data(dataframe, plot_config):
     '''
     Display Plotted Data as table
@@ -97,6 +79,7 @@ def plotted_data(dataframe, plot_config):
 
     return plotted_data
 
+@st.cache
 def z_col_or_grid(dataframe, plot_config):
     '''
     Depending on graph wanted, format data as grid or columns
@@ -118,13 +101,14 @@ def z_col_or_grid(dataframe, plot_config):
 
     return x, y, z
 
+@st.cache
 def plotted_data_3d(x, y , z, plot_config):
     '''
     Display data plotted 3d graph in correct format.
     '''
     if plot_config["Chart_Type"][0] == '3D Scatter':
-        table_3d = pd.DataFrame([x,y,z])
-        table_3d.rename(columns={'x':str(plot_config["Symbol"][0]),'y':str(plot_config["Symbol"][1]),'z':str(plot_config["Symbol"][2])}, inplace = True)
+        table_3d = pd.DataFrame( {str(plot_config["Symbol"][0]): x, str(plot_config["Symbol"][1]): y, str(plot_config["Symbol"][2]): z})
+
     else:
         x = np.round(x, 4)
         table_3d = pd.DataFrame(z)
