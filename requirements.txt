@@ -4,3 +4,4 @@ plotly
 palettable
 scipy
 kaleido
+openpyxl
