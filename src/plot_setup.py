@@ -1,14 +1,14 @@
 import streamlit as st
 from plotly.validators.scatter.marker import SymbolValidator
 
-def trace_dict(view):
+def trace_dict(toggle):
     '''
     Determine trace dictionary depending on 2d or 3d graph
     '''
 
     trace =  dict()
 
-    if view == "2D Plot":
+    if toggle == "2D Plot":
         trace["Symbol"]         = []
         trace["Name"]           = []
         trace["Hex_rep"]        = []
@@ -23,7 +23,7 @@ def trace_dict(view):
         trace["Value"]          = []
         trace["Extra_Signals"]  = 0
 
-    elif view == "3D Plot":
+    elif toggle == "3D Plot":
         trace["Symbol"]         = []
         trace["Name"]           = []
         trace["Chart_Type"]     = []
@@ -75,7 +75,6 @@ def get_name(renamed_name,symbol_name):
         Name = symbol_name
     else:
         Name = renamed_name
-        
     return Name
 
 @st.cache
@@ -92,7 +91,7 @@ def get_y_axis(y_axis):
 
     return y_axis_plot 
 
-@st.cache
+
 def get_y_axis_config(plot_config):
     ''' 
     Get configuration for y axis / subplot

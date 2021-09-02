@@ -2,30 +2,17 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
+
 from plotly.subplots import make_subplots
 from src.functions import y_functions_dict
 from src.plot_setup import get_y_axis, get_hovertip, get_name, get_subplot, get_y_axis_config
 
 @st.cache
-def plot_2D(dataframe, plot_config, symbol_x):
-    '''
-    Plot requested 2d chart using configuration
-    '''
+def plot_2D(dataframe, plot_config, symbol_0):
+    plotted_data = pd.DataFrame()       
     with st.spinner('Generating Interactive Plot'):
-        plotted_data        = pd.DataFrame()
-        symbol              = plot_config["Symbol"]
-        y_axis              = plot_config["Axis"]
-        hex_rep             = plot_config["Hex_rep"]
-        bin_rep             = plot_config["Bin_rep"]
-        name                = plot_config["Name"]
-        function_applied    = plot_config["Function"]
-        function_value      = plot_config["Value"]
-        color               = plot_config["Color"]
-        style               = plot_config["Style"]
-        size                = plot_config["Size"]
-        
         y_axis_config = get_y_axis_config(plot_config)
-        
+
         plot = make_subplots(   
                             rows                = len(plot_config["Plot_row"].unique()), 
                             cols                = 1,
@@ -34,6 +21,7 @@ def plot_2D(dataframe, plot_config, symbol_x):
                             vertical_spacing    = 0.05
                             )
         
+
         # For each signal config.
         for row in range(0,len(plot_config)):
 
@@ -41,30 +29,30 @@ def plot_2D(dataframe, plot_config, symbol_x):
             subplot, plotheight = get_subplot(plot_config["Plot_row"][row])
 
             # Determine y-axis
-            y_axis_plot         = get_y_axis(y_axis[row])
+            y_axis_plot = get_y_axis(plot_config["Axis"][row])
 
             # Show hex / binary 
-            hovertip            = get_hovertip(hex_rep[row], bin_rep[row])
+            hovertip = get_hovertip(plot_config["Hex_rep"][row], plot_config["Bin_rep"][row])
 
             # Rename Signals
-            Name                = get_name(name[row], symbol[row])
+            Name = get_name(plot_config["Name"][row], plot_config["Symbol"][row])
 
-            ## Apply function(s) to signal - this is slow/ not acceptable atm.
+            ## Apply function(s) to signal
             # Function signal name
-            Function_and_Value      = []
-            Function_Value_String   = ''
+            Function_and_Value  = []
+            Function_Value_String         = ''
 
-            if function_applied[row] != 'Not Selected':
+            if plot_config["Function"][row] != 'Not Selected':
 
-                for j in range(0, len(function_applied[row])):
+                for j in range(0, len(plot_config["Function"][row])):
 
-                    if function_value[row][j] != "None":
-                        Value_string = '(' + str(function_value[row][j]) + ')'
+                    if plot_config["Value"][row][j] != "None":
+                        Value_string = '(' + str(plot_config["Value"][row][j]) + ')'
 
                     else:
                         Value_string = ''
 
-                    Function_string = str(function_applied[row][j])
+                    Function_string = str(plot_config["Function"][row][j])
 
                     Function_and_Value.append(' {' + Function_string + Value_string + '}')
 
@@ -72,34 +60,34 @@ def plot_2D(dataframe, plot_config, symbol_x):
                     Function_Value_String = Function_Value_String + k
 
                 Name = str(Name) + Function_Value_String
-                temp_col = dataframe[symbol[row]]
-                for j in range(0, len(function_applied[row])):
-                    if function_value[row][j] == "None":
-                        temp_col = np.vectorize(y_functions_dict[function_applied[row][j]])(temp_col)
+                temp_col = dataframe[plot_config["Symbol"][row]]
+                for j in range(0, len(plot_config["Function"][row])):
+                    if plot_config["Value"][row][j] == "None":
+                        temp_col = np.vectorize(y_functions_dict[plot_config["Function"][row][j]])(temp_col)
                     else:
-                        temp_col = np.vectorize(y_functions_dict[function_applied[row][j]])(temp_col, function_value[row][j] )
+                        temp_col = np.vectorize(y_functions_dict[plot_config["Function"][row][j]])(temp_col, plot_config["Value"][row][j] )
 
                 dataframe[Name] = temp_col
                 y_axis_symbol = dataframe[Name]
                 plotted_data[Name] = y_axis_symbol
             else:
-                y_axis_symbol = dataframe[symbol[row]]
+                y_axis_symbol = dataframe[plot_config["Symbol"][row]]
                 plotted_data[Name] = y_axis_symbol
 
             # Plot type
 
             if plot_config["Chart_Type"][row] == 'lines':
                 
-                plot.add_trace	(go.Scatter (  
-                                            x       		= dataframe[symbol_x],
+                plot.add_trace	(go.Scattergl (  
+                                            x       		= dataframe[symbol_0],
                                             y       		= y_axis_symbol,
                                             name 			= Name,
                                             hovertemplate 	= hovertip,
                                             mode            = 'lines',
                                             line            = dict  (
-                                                                    color   = color[row], 
-                                                                    dash    = style[row], 
-                                                                    width   = size[row]
+                                                                    color   = plot_config["Color"][row], 
+                                                                    dash    = plot_config["Style"][row], 
+                                                                    width   = plot_config["Size"][row]
                                                                     ),
                                             ),
                                 row                 = subplot,
@@ -108,17 +96,17 @@ def plot_2D(dataframe, plot_config, symbol_x):
                                 )
 
             elif plot_config["Chart_Type"][row] == 'markers':
-                plot.add_trace	(go.Scatter (  
-                                            x       		= dataframe[symbol_x],
+                plot.add_trace	(go.Scattergl (  
+                                            x       		= dataframe[symbol_0],
                                             y       		= y_axis_symbol,
                                             name 			= Name,
                                             hovertemplate 	= hovertip,
                                             mode            = 'markers',
                                             marker          = dict  (
-                                                                    color   = color[row], 
-                                                                    symbol  = style[row]
+                                                                    color   = plot_config["Color"][row], 
+                                                                    symbol  = plot_config["Style"][row]
                                                                     ),
-                                            yaxis           = y_axis[row]
+                                            yaxis           = plot_config["Axis"][row]
                                             ),  
                                 row             = subplot, 
                                 col             = 1,
@@ -126,17 +114,17 @@ def plot_2D(dataframe, plot_config, symbol_x):
                                 )
 
             elif plot_config["Chart_Type"][row] == 'lines+markers':
-                plot.add_trace	(go.Scatter (  
-                                            x       		= dataframe[symbol_x],
+                plot.add_trace	(go.Scattergl (  
+                                            x       		= dataframe[symbol_0],
                                             y       		= y_axis_symbol,
                                             name 			= Name,
                                             hovertemplate 	= hovertip,
                                             mode            = 'lines+markers',
                                             marker          = dict  (
-                                                                    color   = color[row]
+                                                                    color   = plot_config["Color"][row]
                                                                     ),
-                                            line            = dict(color=color[row]),
-                                            yaxis           = y_axis[row]
+                                            line            = dict(color=plot_config["Color"][row]),
+                                            yaxis           = plot_config["Axis"][row]
                                             ),  
                                 row             = subplot, 
                                 col             = 1,    
@@ -155,28 +143,21 @@ def plot_2D(dataframe, plot_config, symbol_x):
     return plot
 
 @st.cache
-def plot_3D(x_data, y_data, z_data, dataframe, plot_config, color_palette, overlay, overlay_alpha, overlay_marker, overlay_color):
-    '''
-    Plot requested 3d chart using configuration
-    '''
+def plot_3D(x, y, z, dataframe, plot_config, color_palette, overlay, overlay_alpha, overlay_marker, overlay_color):
+
     with st.spinner("Generating 3D Plot"):
-        
-        symbol_x = str(plot_config["Symbol"][0])
-        symbol_y = str(plot_config["Symbol"][1])
-        symbol_z = str(plot_config["Symbol"][2])
-        plot_type = plot_config["Chart_Type"][0]
 
         plot_3D = go.Figure()
 
-        if plot_type == 'Contour':
+        if plot_config["Chart_Type"][0] == 'Contour':
             plot_3D.add_trace(go.Contour    (
-                                            z           = z_data,
-                                            x           = x_data, 
-                                            y           = y_data,
+                                            z           = z,
+                                            x           = x, 
+                                            y           = y,
                                             colorscale  = color_palette,
-                                            hovertemplate =             symbol_x + ': %{x:.2f}' +
-                                                            '<br>' +    symbol_y + ': %{y:.2f}' +
-                                                            '<br>' +    symbol_z + ': %{z:.2f}',   
+                                            hovertemplate = str(plot_config["Symbol"][0]) + ': %{x:.2f}' + 
+                                                            '<br>' + str(plot_config["Symbol"][1])+ ': %{y:.2f}</br>' +
+                                                            str(plot_config["Symbol"][2]) + ': %{z:.2f}',
 
                                             contours    = dict  (
                                                                 coloring    ='heatmap',
@@ -188,28 +169,27 @@ def plot_3D(x_data, y_data, z_data, dataframe, plot_config, color_palette, overl
                                                                 ), 
 
                                             colorbar    = dict  (
-                                                                title       = symbol_z,
+                                                                title       = str(plot_config["Symbol"][2]),
                                                                 titleside   = 'right',
                                                                 titlefont   = dict  (
                                                                                     size=12,
                                                                                     family='Arial, sans'
                                                                                     )
                                                                 )
-                                )           )
+                                    )       )
 
-        if plot_type == 'Surface':
+        if plot_config["Chart_Type"][0] == 'Surface':
                         plot_3D.add_trace(go.Surface  (
-                                            z           = z_data,
-                                            x           = x_data, 
-                                            y           = y_data,
+                                            z           = z,
+                                            x           = x, 
+                                            y           = y,
                                             colorscale  = color_palette,
 
-                                            hovertemplate =             symbol_x + ': %{x:.2f}' +
-                                                            '<br>' +    symbol_y + ': %{y:.2f}' +
-                                                            '<br>' +    symbol_z + ': %{z:.2f}',   
-
+                                            hovertemplate = str(plot_config["Symbol"][0]) + ': %{x:.2f}' + 
+                                                            '<br>' + str(plot_config["Symbol"][1])+ ': %{y:.2f}</br>' +
+                                                            str(plot_config["Symbol"][2]) + ': %{z:.2f}',              
                                             colorbar    = dict  (
-                                                                title       = symbol_z,
+                                                                title       = str(plot_config["Symbol"][2]),
                                                                 titleside   = 'right',
                                                                 titlefont   = dict  (
                                                                                     size=12,
@@ -217,19 +197,20 @@ def plot_3D(x_data, y_data, z_data, dataframe, plot_config, color_palette, overl
                                                                                     )
                                                                 )
                                             )           )
-        if plot_type == 'Heatmap':
+        if plot_config["Chart_Type"][0] == 'Heatmap':
                         plot_3D.add_trace(go.Heatmap  (
-                                            z           = z_data,
-                                            x           = x_data, 
-                                            y           = y_data,
+                                            z           = z,
+                                            x           = x, 
+                                            y           = y,
+
                                             colorscale  = color_palette,
 
-                                            hovertemplate =             symbol_x + ': %{x:.2f}' +
-                                                            '<br>' +    symbol_y + ': %{y:.2f}' +
-                                                            '<br>' +    symbol_z + ': %{z:.2f}',   
+                                            hovertemplate = str(plot_config["Symbol"][0]) + ': %{x:.2f}' + 
+                                                            '<br>' + str(plot_config["Symbol"][1])+ ': %{y:.2f}</br>' +
+                                                            str(plot_config["Symbol"][2]) + ': %{z:.2f}',
 
                                             colorbar    = dict  (
-                                                                title       = symbol_z,
+                                                                title       = str(plot_config["Symbol"][2]),
                                                                 titleside   = 'right',
                                                                 titlefont   = dict  (
                                                                                     size=12,
@@ -238,29 +219,29 @@ def plot_3D(x_data, y_data, z_data, dataframe, plot_config, color_palette, overl
                                                                 )
                                             )           )
 
-        if plot_type == '3D Scatter':
+        if plot_config["Chart_Type"][0] == '3D Scatter':
             plot_3D.add_trace(go.Scatter3d  (
-                                            z           = z_data,
-                                            x           = x_data, 
-                                            y           = y_data,
+                                            z           = z,
+                                            x           = x, 
+                                            y           = y,
                                             mode        = 'markers',
-                                            marker      = dict  (
-                                                                color = z_data,
-                                                                colorscale  = color_palette,
-                                                                opacity = 0.7
+                                            marker      = dict(
+                                                        color = z,
+                                                        colorscale  = color_palette,
+                                                        opacity = 0.7
                                                                 ),
 
-                                            hovertemplate =             symbol_x + ': %{x:.2f}' +
-                                                            '</br>' +   symbol_y + ': %{y:.2f}' +
-                                                            '</br>' +   symbol_z + ': %{z:.2f}',            
+                                            hovertemplate = str(plot_config["Symbol"][0]) + ': %{x:.2f}' + 
+                                                            '<br>' + str(plot_config["Symbol"][1])+ ': %{y:.2f}</br>' +
+                                                            str(plot_config["Symbol"][2]) + ': %{z:.2f}',             
 
                                             )           )
         
         if overlay == True:
             plot_3D.add_trace	(go.Scatter (  
-                            x       		= dataframe[symbol_x],
-                            y       		= dataframe[symbol_y],
-                            name 			= "X: "  + str(dataframe[symbol_x]) + "Y: "  + str(dataframe[symbol_y]),
+                            x       		= dataframe[plot_config["Symbol"][0]],
+                            y       		= dataframe[plot_config["Symbol"][1]],
+                            name 			= "X: "  + str(dataframe[plot_config["Symbol"][0]]) + "Y: "  + str(dataframe[plot_config["Symbol"][1]]),
                             mode            = 'markers',
                             opacity         = overlay_alpha,
                             marker          = dict  (
@@ -271,19 +252,13 @@ def plot_3D(x_data, y_data, z_data, dataframe, plot_config, color_palette, overl
                 )
                                 
         plot_3D.update_layout	(
-                                hoverlabel_align = 'right',
-                                autosize    = True,
-                                height      = 720,
-                                width       = 1080,
-                                title       = plot_type,
-                                xaxis       = dict(title = symbol_x),
-                                yaxis       = dict(title = symbol_y)
-                                )
-        
-        plot_3D.update_scenes   (
-                                xaxis       = dict(title = symbol_x),
-                                yaxis       = dict(title = symbol_y),
-                                zaxis       = dict(title = symbol_z)
-                                )
+                    autosize    = True,
+                    height      = 720,
+                    width       = 1080,
+                    title       = plot_config["Chart_Type"][0] ,
+                    xaxis       = dict(title=str(plot_config["Symbol"][0])),
+                    yaxis       = dict(title=str(plot_config["Symbol"][1]))
+                    
+                    )
 
         return plot_3D
