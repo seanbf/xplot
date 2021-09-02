@@ -18,9 +18,9 @@ page_config = st.set_page_config(
 st.sidebar.title('xPlot')
 st.sidebar.markdown('''<small>v0.1</small>''', unsafe_allow_html=True)
 
-'''
-Set up sidebar.
-'''
+
+#Set up sidebar.
+
 st.markdown(sidebar_md(), unsafe_allow_html=True)
 
 toolbar             = plotly_toolbar_config()
@@ -31,9 +31,9 @@ marker_names = get_markers()
 
 
 
-'''
-Determine if user wanted 2D or 3D plot.
-'''
+
+#Determine if user wanted 2D or 3D plot.
+
 radio_2d_3d         = st.sidebar.radio('', ['2D Plot','3D Plot'], key="2Dor3D")
 
 trace = view_2d_or_3d(radio_2d_3d)
@@ -46,9 +46,9 @@ else:
 
 
 
-'''
-Ask for file upload and read.
-'''   
+
+#Ask for file upload and read.
+   
 uploaded_file = st.sidebar.file_uploader(   
                                         label="",
                                         accept_multiple_files=False,
@@ -80,9 +80,9 @@ elif uploaded_file is not None:
 
 
 
-'''
-Determine plot configuration based on user selection.
-'''
+
+#Determine plot configuration based on user selection.
+
 plot_config     = pd.DataFrame(trace)
 
 if radio_2d_3d == '2D Plot':
@@ -104,16 +104,16 @@ else:
 
 
 
-'''
-Plot resulting chart
-'''
+
+#Plot resulting chart
+
 st.plotly_chart(plot, use_container_width=True, config=toolbar)
 
 
 
-'''
-Display analysis of plotted data
-'''
+
+#Display analysis of plotted data
+
 st.subheader("Quick Analysis")
 
 if radio_2d_3d == '2D Plot':
@@ -128,9 +128,9 @@ checkbox_plotted = st.checkbox(label= "Display Plotted Data as Table", key="Plot
 
 
 
-'''
-Prompt user with export options and links.
-'''
+
+#Prompt user with export options and links.
+
 with st.expander("Export", expanded=True):
     col_export_name,col_export_format, col_datetime, col_generate_link, col_export_link = st.columns(5)
     file_name               = export_name(col_export_name, col_datetime, original_file_name)
