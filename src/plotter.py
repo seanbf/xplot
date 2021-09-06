@@ -135,7 +135,7 @@ def plot_2D(dataframe, plot_config, symbol_0):
                 st.warning("Chart_Type Failure")
 
             plot.update_layout	(
-                                hovermode	= "x",  
+                                hovermode	= 'x',  
                                 autosize    = True,
                                 height      = plotheight
                                 )    
@@ -183,6 +183,12 @@ def plot_3D(x, y, z, dataframe, plot_config, color_palette, overlay, overlay_alp
                                             z           = z,
                                             x           = x, 
                                             y           = y,
+
+                                            contours =  {
+                                                        "x": {"show": True},
+                                                        "z": {"show": True}
+                                                        },
+
                                             colorscale  = color_palette,
 
                                             hovertemplate = str(plot_config["Symbol"][0]) + ': %{x:.2f}' + 

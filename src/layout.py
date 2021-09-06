@@ -185,7 +185,7 @@ def signal_container_2d(trace, symbols, color_palette, marker_names, y_function_
                 # Color
                 trace["Color"].append(col_color.color_picker('Pick a color ',color_palette[color_counter],help="(Default: "+color_palette[color_counter]+")", key="color_"+str(available_symbols)))
                 # Subplot
-                trace["Plot_row"].append(col_subplot.selectbox("Subplot",["Main Plot","Subplot 1","Subplot 2"], key="subplot_"+str(available_symbols)))
+                trace["Plot_row"].append(col_subplot.selectbox("Subplot",["Main Plot","Subplot 1","Subplot 2","Subplot 3", "Subplot 4", "Subplot 5"], key="subplot_"+str(available_symbols)))
 
                 ## Formatting
                 col_type, col_style, col_size  = st.columns(3)

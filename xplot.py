@@ -135,7 +135,7 @@ with st.expander("Export", expanded=True):
     col_export_name,col_export_format, col_datetime, col_generate_link, col_export_link = st.columns(5)
     file_name               = export_name(col_export_name, col_datetime, original_file_name)
     export_format           = show_export_format(col_export_format)
-    include_plotted_data    = st.checkbox("Export Plotted Data", value=True)
+    include_plotted_data    = st.checkbox("Export Plotted Data", value=False)
     include_raw_data        = st.checkbox("Export Raw Data", value=False)
 
 if checkbox_plotted == True: 
