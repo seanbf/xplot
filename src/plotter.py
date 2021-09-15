@@ -190,7 +190,11 @@ def plot_3D(x, y, z, dataframe, plot_config, color_palette, overlay, overlay_alp
                                                         },
 
                                             colorscale  = color_palette,
+<<<<<<< HEAD
+                                        
+=======
                                      
+>>>>>>> 038394f1fb2cc6cb6e7d98c3301def72256ae320
                             
                                             hovertemplate = str(plot_config["Symbol"][0]) + ': %{x:.2f}' + 
                                                             '<br>' + str(plot_config["Symbol"][1])+ ': %{y:.2f}</br>' +

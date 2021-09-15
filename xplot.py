@@ -38,13 +38,16 @@ radio_2d_3d         = st.sidebar.radio('', ['2D Plot','3D Plot'], key="2Dor3D")
 
 trace = view_2d_or_3d(radio_2d_3d)
 
+# Initialization
+if 'trace' not in st.session_state:
+    st.session_state['trace'] = trace
+
+st.write(st.session_state['trace'])
 if radio_2d_3d == '3D Plot':
     trace["Chart_Type"], trace["Fill_Value"], trace["Interp_Method"], trace["Grid_Res"], color_palette, overlay, overlay_alpha, overlay_marker, overlay_color = plot_config_3d(radio_2d_3d, trace, marker_names)
 
 else:
     trace["Extra_Signals"], color_palette  = plot_config_2d(trace, radio_2d_3d)
-
-
 
 
 #Ask for file upload and read.
@@ -102,31 +105,20 @@ else:
     x, y, z = z_col_or_grid(dataframe, plot_config)
     plot = plot_3D(x, y, z,dataframe, plot_config, color_palette, overlay, overlay_alpha, overlay_marker, overlay_color )
 
-
-
-
 #Plot resulting chart
+if st.button("Generate Plot"):
+    st.plotly_chart(plot, use_container_width=True, config=toolbar)
 
-st.plotly_chart(plot, use_container_width=True, config=toolbar)
+    #Display analysis of plotted data
 
+    st.subheader("Quick Analysis")
 
-
-
-#Display analysis of plotted data
-
-st.subheader("Quick Analysis")
-
-if radio_2d_3d == '2D Plot':
-    quick_analysis_result = plotted_analysis_simple_2d(dataframe, plot_config)
-    st.write(quick_analysis_result)
-else:
-    quick_analysis_result = plotted_analysis_simple_3d(dataframe, plot_config)
-    st.write(quick_analysis_result)
-
-checkbox_raw = st.checkbox(label= "Display Raw Data as Table", key="Raw_Data")
-checkbox_plotted = st.checkbox(label= "Display Plotted Data as Table", key="Plotted_Data")
-
-
+    if radio_2d_3d == '2D Plot':
+        quick_analysis_result = plotted_analysis_simple_2d(dataframe, plot_config)
+        st.write(quick_analysis_result)
+    else:
+        quick_analysis_result = plotted_analysis_simple_3d(dataframe, plot_config)
+        st.write(quick_analysis_result)
 
 
 #Prompt user with export options and links.
@@ -137,6 +129,9 @@ with st.expander("Export", expanded=True):
     export_format           = show_export_format(col_export_format)
     include_plotted_data    = st.checkbox("Export Plotted Data", value=False)
     include_raw_data        = st.checkbox("Export Raw Data", value=False)
+
+checkbox_raw = st.checkbox(label= "Display Raw Data as Table", key="Raw_Data")
+checkbox_plotted = st.checkbox(label= "Display Plotted Data as Table", key="Plotted_Data")
 
 if checkbox_plotted == True: 
     st.subheader("Plotted Data") 
