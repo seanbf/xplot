@@ -4,18 +4,20 @@ import streamlit as st
 from datetime import datetime
 import os
 
-def export_name(col_export_name, col_datetime, original_file_name):
-    output_name = col_export_name.text_input(label="Export Name: ")
-    if output_name == '':
+def export_name(name, datetime, original_file_name):
+    
+    if name == '':
         output_name = os.path.splitext(original_file_name)[0]
-        
-    output_datetime = col_datetime.checkbox(label="Include datetime")
-    if output_datetime == True:
+    else:
+        output_name = name
+    
+    if datetime == True:
         export_datetime = "_" + str("{:%Y_%m_%d_%H_%M_%S}".format(datetime.now()))
     else:
         export_datetime = ''
 
     file_name = str(output_name) + str(export_datetime)
+
     return file_name
 
 def show_export_format(col_export_format):         

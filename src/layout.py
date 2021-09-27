@@ -35,92 +35,93 @@ def plotly_toolbar_config():
                 })
     return config 
 
-def view_2d_or_3d(radio_2d_3d):
+def view_select(view):
     """
     Select between 2D and 3D plotter
     """
     
-    if radio_2d_3d      == '2D Plot':
-        trace           = trace_dict(radio_2d_3d)
+    if view     == '2D Plot':
+        trace   = trace_dict(view)
 
-    elif radio_2d_3d    == '3D Plot':
-        trace           = trace_dict(radio_2d_3d)
+    elif view   == '3D Plot':
+        trace   = trace_dict(view)
     
     return trace
 
-def plot_config_3d(radio_2d_3d, trace, marker_names):
+def plot_config_3d(view, trace, marker_names):
     """
     Container to configure 3D plot, i.e colormapping
     """
 
-    if radio_2d_3d == "3D Plot":
+    if view == "3D Plot":
         with st.expander("3D Plot Configuration", expanded=True):
             col_plot_type, col_grid_res, col_fill, col_interp = st.columns(4)
             col_col_type, col_choice, col_preview, col_overlay = st.columns(4)
-            trace["Chart_Type"] = col_plot_type.selectbox("Plot Type", ["Contour","3D Scatter","Surface","Heatmap"])
-            color_set_type = col_col_type.selectbox('Color Map Type', ['Sequential','Diverging'], key="coltype")
+            trace["Chart_Type"] = col_plot_type.selectbox("Plot Type", ["Contour","3D Scatter","Surface","Heatmap"], key = "Chart_Type")
+            col_col_type.selectbox('Color Map Type', ['Sequential','Diverging'], key="Color_Set_Type")
 
-            if color_set_type == 'Sequential':
+            if st.session_state["Color_Set_Type"] == 'Sequential':
                 color_map = list(sequential_color_dict().keys())
             else:
                 color_map = list(diverging_color_dict().keys())
 
             color_set   = col_choice.selectbox("Color Map", color_map)  
-            if color_set_type == 'Sequential':
-                color_palette = sequential_color_dict().get(color_set)
+            if st.session_state["Color_Set_Type"] == 'Sequential':
+                st.session_state['Color_Palette'] = sequential_color_dict().get(color_set)
             else:
-                color_palette = diverging_color_dict().get(color_set)
+                st.session_state['Color_Palette'] = diverging_color_dict().get(color_set)
 
-            colormap_preview = plot_color_set(color_palette, color_set, radio_2d_3d)
+            colormap_preview = plot_color_set(st.session_state['Color_Palette'], color_set, view)
             col_preview.image(colormap_preview, use_column_width = True)
 
             if trace["Chart_Type"] != '3D Scatter':
                 trace["Grid_Res"] = col_grid_res.number_input("Grid Resolution", min_value=0.0, max_value=100000.0, value=50.0, step=0.5, key="Grid_Res")
-                trace["Fill_Value"] = col_fill.selectbox("Fill Value", ["nan",0], help="fill missing data with the selected value")
-                trace["Interp_Method"] = col_interp.selectbox("Interpolation Method", ["linear","nearest","cubic"])
+                trace["Fill_Value"] = col_fill.selectbox("Fill Value", ["nan",0], help="fill missing data with the selected value", key = "Fill_Value")
+                trace["Interp_Method"] = col_interp.selectbox("Interpolation Method", ["linear","nearest","cubic"], key = "Interp_Method")
 
             else:
                 trace["Fill_Value"] = None
                 trace["Interp_Method"] = None
                 trace["Grid_Res"] = None
             
-            overlay = col_overlay.checkbox("Overlay Original Data", help="Display scatter of original data overlayed on chart")
+            st.session_state["Overlay"] = col_overlay.checkbox("Overlay Original Data", help="Display scatter of original data overlayed on chart")
             
-            if overlay == True:
+            if st.session_state["Overlay"] == True:
+                st.subheader("Overlay")
                 col_overlay_alpha, col_overlay_marker, col_overlay_color = st.columns(3)
-                overlay_alpha = col_overlay_alpha.slider("Opacity",value=0.5,min_value=0.0, max_value=1.0, step=0.01)
-                overlay_marker = col_overlay_marker.selectbox("Style", marker_names, help="https://plotly.com/python/marker-style/")
-                overlay_color = col_overlay_color.color_picker('Pick a color ', '#000000')
+                overlay_alpha = col_overlay_alpha.slider("Opacity",value=0.5,min_value=0.0, max_value=1.0, step=0.01, key = "Overlay_Alpha")
+                overlay_marker = col_overlay_marker.selectbox("Style", marker_names, help="https://plotly.com/python/marker-style/", key = "Overlay Marker")
+                overlay_color = col_overlay_color.color_picker('Pick a color ', '#000000', key = "Overlay Color")
             else:
                 overlay_alpha = None
                 overlay_marker = None
                 overlay_color = None
     else:
         trace["Chart_Type"] = None
-        color_palette = None
+        st.session_state['Color_Palette'] = None
         trace["Fill_Value"] = None
         trace["Interp_Method"] = None
         trace["Grid_Res"] = None
 
 
 
-    return trace["Chart_Type"], trace["Fill_Value"], trace["Interp_Method"], trace["Grid_Res"], color_palette, overlay, overlay_alpha, overlay_marker, overlay_color
+    return trace["Chart_Type"], trace["Fill_Value"], trace["Interp_Method"], trace["Grid_Res"], st.session_state['Color_Palette'], st.session_state["Overlay"], overlay_alpha, overlay_marker, overlay_color
 
-def plot_config_2d(trace, radio_2d_3d):
+def plot_config_2d(trace, view):
     with st.expander("2D Plot Configuration", expanded=True):
         col_choice, col_extra_signals, col_preview, col_placeholder = st.columns(4)
         qualitive_color_sets_dict       = qualitive_color_dict()
         qualitive_color_sets_names      = list(qualitive_color_sets_dict.keys())
         color_set = col_choice.selectbox("Color Palette",qualitive_color_sets_names, key='color_set', help = "Recommended: Light Theme use Plotly, Dark Theme use Pastel" )
        
-        color_palette = qualitive_color_sets_dict.get(color_set)
+        st.session_state['Color_Palette'] = qualitive_color_sets_dict.get(color_set)
     
-        colormap_preview = plot_color_set(color_palette, color_set, radio_2d_3d)
+        colormap_preview = plot_color_set(st.session_state['Color_Palette'], color_set, view)
         col_preview.image(colormap_preview, use_column_width = True)
 
         trace["Extra_Signals"] = col_extra_signals.number_input("Extra Signals", min_value=0, max_value=30, value=0, step=1, help = "Generate extra signal containers, useful if your comparing signals with functions applied")
 
-    return trace["Extra_Signals"], color_palette
+    return trace["Extra_Signals"], st.session_state['Color_Palette']
 
 def signal_container_3d(trace, symbols):
     '''
