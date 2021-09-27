@@ -1,8 +1,8 @@
 # xPlot 📈
 
 xPlot is a Python/Streamlit based data explorer to plot data from files for analysis.
-It uses a WebUI powered by the Streamlit library, and plotting by the Plotly Library.
-Data is handled and party manipulated by Pandas and Numpy.
+<br>It uses a WebUI powered by the Streamlit library, and plotting by the Plotly Library.
+<br>Data is handled and partly manipulated by Pandas and Numpy.
 
 ## Installation
 
