@@ -1,1 +1,1 @@
-py -3.7 -m streamlit run program/xPlot.py
+py -3.7 -m streamlit run program/xplot.py
