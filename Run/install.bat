@@ -1,41 +1,8 @@
-::[Bat To Exe Converter]
-::
-::YAwzoRdxOk+EWAnk
-::fBw5plQjdG8=
-::YAwzuBVtJxjWCl3EqQJgSA==
-::ZR4luwNxJguZRRnk
-::Yhs/ulQjdF+5
-::cxAkpRVqdFKZSDk=
-::cBs/ulQjdF+5
-::ZR41oxFsdFKZSDk=
-::eBoioBt6dFKZSDk=
-::cRo6pxp7LAbNWATEpCI=
-::egkzugNsPRvcWATEpCI=
-::dAsiuh18IRvcCxnZtBJQ
-::cRYluBh/LU+EWAnk
-::YxY4rhs+aU+JeA==
-::cxY6rQJ7JhzQF1fEqQJQ
-::ZQ05rAF9IBncCkqN+0xwdVs0
-::ZQ05rAF9IAHYFVzEqQJQ
-::eg0/rx1wNQPfEVWB+kM9LVsJDGQ=
-::fBEirQZwNQPfEVWB+kM9LVsJDGQ=
-::cRolqwZ3JBvQF1fEqQJQ
-::dhA7uBVwLU+EWDk=
-::YQ03rBFzNR3SWATElA==
-::dhAmsQZ3MwfNWATElA==
-::ZQ0/vhVqMQ3MEVWAtB9wSA==
-::Zg8zqx1/OA3MEVWAtB9wSA==
-::dhA7pRFwIByZRRnk
-::Zh4grVQjdCyDJGyX8VAjFBxVWACbMmSGIroL5uT07u6UnlUNWO0rNdna27WMIeNAuUDiIZIrjn4OyJsNVE5ZL0f/PV1s8DcQ7zeBYcSasljdQ0aa8ko8Fytxn2aw
-::YB416Ek+ZG8=
-::
-::
-::978f952a14a936cc963da21a135fa983
 @ECHO off
 cls
 :start
 SET ThisScriptsDirectory=%~dp0
-SET PowerShellScriptPath=%ThisScriptsDirectory%/Run/ps_script.ps1
+SET PowerShellScriptPath=%ThisScriptsDirectory%/ps_script.ps1
 ECHO.
 ECHO ################################
 ECHO [         xPlot Install        ]
@@ -65,8 +32,8 @@ goto end
 
 :install_dep
 ECHO Installing Dependancies and Launching xPlot
-py -3.7 -m pip install -r Run/requirements.txt
-py -3.7 -m streamlit run Run/xPlot.py
+py -3.7 -m pip install -r requirements.txt
+py -3.7 -m streamlit run xPlot.py
 goto end
 
 :end
