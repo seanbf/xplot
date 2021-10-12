@@ -32,8 +32,8 @@ goto end
 
 :install_dep
 ECHO Installing Dependancies and Launching xPlot
-py -3.7 -m pip install -r program\install\requirements.txt
-py -3.7 -m streamlit run program\xPlot.py
+py -3.7 -m pip install -r %ThisScriptsDirectory%\program\install\requirements.txt
+py -3.7 -m streamlit run %ThisScriptsDirectory%\program\xplot.py
 goto end
 
 :end

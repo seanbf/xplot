@@ -1,1 +1,5 @@
-py -3.7 -m streamlit run program/xPlot.py
+@ECHO off
+cls
+:start
+SET ThisScriptsDirectory=%~dp0
+py -3.7 -m streamlit run %ThisScriptsDirectory%\program\xPlot.py

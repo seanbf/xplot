@@ -140,4 +140,4 @@ py -3.7 -m pip install --user --upgrade pip
 Write-Host "Launching xPlot"
 Set-Location $curDir
 py -3.7 -m pip install -r requirements.txt
-py -3.7 -m streamlit run ../xPlot.py
+py -3.7 -m streamlit run ../xplot.py
