@@ -1,6 +1,7 @@
-palettable==3.3.0
-scipy==1.7.0
-numpy==1.20.3
-pandas==1.2.4
-streamlit==0.89.0
-plotly==4.14.3
+palettable>=3.3.0
+scipy>=1.7.0
+numpy>=1.20.3
+pandas>=1.2.4
+streamlit>=0.89.0
+plotly>=4.14.3
+kaleido>=0.2.1
