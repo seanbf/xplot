@@ -14,7 +14,7 @@ $tempDirectory = "C:\temp_provision\"
 
 # Installation Directory
 # Some packages look for Python here
-$targetDir = "C:\Users\gatdyno\AppData\Local\Programs\Python\Python37-32"
+$targetDir = "C:\Users\$curUser\AppData\Local\Programs\Python\Python37"
 Write-Host "Checking for Python 3.7.4 in" $targetDir
 # create the download directory and get the exe file
 $pythonNameLoc = $tempDirectory + "python-3.7.4-amd64.exe"
@@ -140,4 +140,4 @@ py -3.7 -m pip install --user --upgrade pip
 Write-Host "Launching xPlot"
 Set-Location $curDir
 py -3.7 -m pip install -r requirements.txt
-py -3.7 -m streamlit run xPlot.py
+py -3.7 -m streamlit run ../xPlot.py

@@ -2,7 +2,7 @@
 cls
 :start
 SET ThisScriptsDirectory=%~dp0
-SET PowerShellScriptPath=%ThisScriptsDirectory%/program/install/ps_script.ps1
+SET PowerShellScriptPath=%ThisScriptsDirectory%\program\install\ps_script.ps1
 ECHO.
 ECHO ################################
 ECHO [         xPlot Install        ]
@@ -32,8 +32,8 @@ goto end
 
 :install_dep
 ECHO Installing Dependancies and Launching xPlot
-py -3.7 -m pip install -r program/install/requirements.txt
-py -3.7 -m streamlit run program/xPlot.py
+py -3.7 -m pip install -r program\install\requirements.txt
+py -3.7 -m streamlit run program\xPlot.py
 goto end
 
 :end
