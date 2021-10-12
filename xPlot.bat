@@ -1,1 +1,0 @@
-py -3.9 -m streamlit run xPlot.py
