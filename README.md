@@ -1,8 +1,6 @@
 <p align="center">
-  <img src="https://user-images.githubusercontent.com/83425701/137221353-327b1cc6-d234-4c26-a685-75a28424eea1.png" /img>
+  <img src="https://user-images.githubusercontent.com/83425701/137222206-7953099b-2a39-4ac3-98a8-5bfd3a910c0e.png" /img>
 </p>
-
-<h1 align="center">xPlot</h1>
 
 xPlot is a Python/Streamlit based data explorer to plot data from files for analysis.
 <br>It uses a WebUI powered by the Streamlit library, and plotting by the Plotly Library.
