@@ -8,7 +8,7 @@ xPlot is a Python/Streamlit based data explorer to plot data from files for anal
 
 ## Installation
 
-<br>`install.bat` is a batch file that allows the user to select from 2 installation choices.
+<br>`install.ink` is a shortcut to a batch file that allows the user to select from 2 installation choices.
 - **Option [1]: Install Python 3.7.4, Paths, Dependancies and Launch xPlot**
 <br>Using option [1] will launch a powershell script to install Python 3.7.4, all the dependencies required by xPlot and then launch the tool in a web browser
 - **Option [2]: Install Dependancies and Launch xPlot**
