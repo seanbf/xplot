@@ -27,7 +27,10 @@ Supported plots are:
 - Scatter
 - Line and Scatter
 
-![image](https://user-images.githubusercontent.com/83425701/137307393-16b73919-2d67-40ba-90b1-8bd9fa20786d.png)
+![image](https://user-images.githubusercontent.com/83425701/137307577-3c0ef09c-49a9-4738-8cf1-4484f90de77f.png)
+![image](https://user-images.githubusercontent.com/83425701/137308794-2bda73dd-d12e-4096-934c-5b3a9df1dd25.png)
+![image](https://user-images.githubusercontent.com/83425701/137308847-7d6041a5-8617-457b-a7d5-203cc6ece13e.png)
+
 
 ### 3D
 - Contour *
@@ -35,7 +38,8 @@ Supported plots are:
 - Surface
 - Heatmap *
 * Not visually 3D but use three dimensions of data.
+![image](https://user-images.githubusercontent.com/83425701/137308065-8a3dd4cb-417d-453a-9481-04cc3cc7adaf.png)
+![image](https://user-images.githubusercontent.com/83425701/137308427-a93921fe-9136-4c63-8a32-03d9d4078420.png)
+![image](https://user-images.githubusercontent.com/83425701/137308578-1c503083-d586-4eec-a993-4289b6535493.png)
 
-![image](https://user-images.githubusercontent.com/83425701/134918341-34260cc6-6efc-424f-88e2-07fad63ba7f8.png)
 
-![image](https://user-images.githubusercontent.com/83425701/134918427-f3b41999-57ad-4b95-ba90-6acb110122c0.png)
