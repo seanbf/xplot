@@ -27,7 +27,7 @@ Supported plots are:
 - Scatter
 - Line and Scatter
 
-![image](https://user-images.githubusercontent.com/83425701/134918166-f0dd8b45-42e0-4b04-8824-44d10c5cda7c.png)
+![image](https://user-images.githubusercontent.com/83425701/137307393-16b73919-2d67-40ba-90b1-8bd9fa20786d.png)
 
 ### 3D
 - Contour *
