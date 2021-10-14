@@ -17,7 +17,7 @@ xPlot is a Python/Streamlit based data explorer to plot data from files for anal
 
 ## Running
 
-<br>`xPlot.bat` will apply `py - 3.9 -m streamlit run xPlot.py` command to the cmd terminal which will launch a local server and open up the default web browser as the front-end.
+<br>`xPlot.bat` will apply `py - 3.7 -m streamlit run xPlot.py` command to the cmd terminal which will launch a local server and open up the default web browser as the front-end.
 
 ## Plotting
 
