@@ -31,7 +31,6 @@ Supported plots are:
 ![image](https://user-images.githubusercontent.com/83425701/137308794-2bda73dd-d12e-4096-934c-5b3a9df1dd25.png)
 ![image](https://user-images.githubusercontent.com/83425701/137308847-7d6041a5-8617-457b-a7d5-203cc6ece13e.png)
 
-image_export.py is slightly modified from : https://github.com/bodealamu/opencharts
 ### 3D
 - Contour *
 - 3D Scatter
@@ -43,3 +42,4 @@ image_export.py is slightly modified from : https://github.com/bodealamu/opencha
 ![image](https://user-images.githubusercontent.com/83425701/137308578-1c503083-d586-4eec-a993-4289b6535493.png)
 
 
+image_export.py is slightly modified from : https://github.com/bodealamu/opencharts
