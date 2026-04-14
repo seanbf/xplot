@@ -7,7 +7,7 @@ from src.functions import y_functions_dict
 from src.layout import sidebar_md, plotly_toolbar_config, view_select, plot_config_3d, plot_config_2d,  signal_container_3d, signal_container_2d
 from src.plotter import plot_2D, plot_3D
 from src.plot_setup import get_markers
-from src.utils import load_dataframe, plotted_analysis_simple_2d, plotted_analysis_simple_3d, raw_data, plotted_data, z_col_or_grid, plotted_data_3d
+from src.utils import load_dataframe, plotted_analysis_simple_2d, plotted_analysis_simple_3d, raw_data, plotted_data, z_col_or_grid, plotted_data_3d, handle_missing_values, get_missing_values_info
 from src.image_export import show_export_format, export_name, download_chart
 
 page_config = st.set_page_config(
@@ -77,6 +77,36 @@ elif st.session_state["Uploaded File"] is not None:
     original_file_name  = st.session_state["Uploaded File"].name
 
     dataframe, columns  = load_dataframe(st.session_state["Uploaded File"])
+
+    missing_info = get_missing_values_info(dataframe)
+    
+    missing_method = 'drop'
+    
+    if missing_info['missing_cells'] > 0:
+        st.sidebar.markdown("---")
+        st.sidebar.subheader("⚠️ Missing Values Detected")
+        st.sidebar.info(f"Found {missing_info['missing_cells']} missing values ({missing_info['missing_percentage']:.1f}%)")
+        
+        missing_method = st.sidebar.selectbox(
+            "Handle missing values:",
+            options=['drop', 'zero_fill', 'forward_fill'],
+            format_func=lambda x: {
+                'drop': 'Delete rows with missing values',
+                'zero_fill': 'Fill with 0',
+                'forward_fill': 'Forward fill (use previous value)'
+            }[x],
+            help="Choose how to handle missing values in the dataset"
+        )
+    
+    dataframe = handle_missing_values(dataframe, missing_method)
+
+    if missing_info['missing_cells'] > 0:
+        method_labels = {
+            'drop': 'Rows with missing values have been removed',
+            'zero_fill': 'Missing values have been filled with 0',
+            'forward_fill': 'Missing values have been forward filled'
+        }
+        st.success(f"✅ {method_labels[missing_method]}. Dataset now has {len(dataframe)} rows.")
 
     symbols             = list(dataframe)
 

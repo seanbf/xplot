@@ -132,3 +132,34 @@ def plotted_data_3d(x, y , z, plot_config):
         table_3d.index = [y]
         table_3d = table_3d.sort_index(ascending=False)
     return table_3d
+
+def handle_missing_values(dataframe, method):
+    '''
+    Handle missing values in the dataframe
+    methods: 'drop', 'zero_fill', 'forward_fill'
+    '''
+    df = dataframe.copy()
+    
+    if method == 'drop':
+        df = df.dropna(axis=0, how='any')
+    elif method == 'zero_fill':
+        df = df.fillna(value=0)
+    elif method == 'forward_fill':
+        df = df.fillna(method='ffill', axis=0)
+    
+    return df
+
+def get_missing_values_info(dataframe):
+    '''
+    Get information about missing values in the dataframe
+    '''
+    total_cells = dataframe.size
+    missing_cells = dataframe.isnull().sum().sum()
+    missing_percentage = (missing_cells / total_cells) * 100
+    
+    return {
+        'missing_cells': missing_cells,
+        'total_cells': total_cells,
+        'missing_percentage': missing_percentage,
+        'by_column': dataframe.isnull().sum().to_dict()
+    }
