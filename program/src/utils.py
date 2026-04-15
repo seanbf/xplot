@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import streamlit as st
+import warnings
 from scipy.interpolate import griddata
 
 @st.cache
@@ -105,16 +106,34 @@ def z_col_or_grid(dataframe, plot_config):
     y = dataframe[plot_config["Symbol"][1]]
     z = dataframe[plot_config["Symbol"][2]]
 
+    points_df = pd.DataFrame({'x': x, 'y': y, 'z': z}).dropna()
+    
     if plot_config["Chart_Type"][0] != '3D Scatter':
+        points_df = points_df.drop_duplicates(subset=['x', 'y'])
+        
+        x_clean = points_df['x'].values
+        y_clean = points_df['y'].values
+        z_clean = points_df['z'].values
 
-        xi = np.linspace( float(min(x)), float(max(x)), int(plot_config["Grid_Res"][0]) )
-        yi = np.linspace( float(min(y)), float(max(y)), int(plot_config["Grid_Res"][0]) )
+        xi = np.linspace(float(min(x_clean)), float(max(x_clean)), int(plot_config["Grid_Res"][0]))
+        yi = np.linspace(float(min(y_clean)), float(max(y_clean)), int(plot_config["Grid_Res"][0]))
 
-        X,Y = np.meshgrid(xi,yi)
+        X, Y = np.meshgrid(xi, yi)
 
-        z = griddata( (x,y),z,(X,Y), fill_value=plot_config["Fill_Value"][0], method='linear')  
+        try:
+            z = griddata((x_clean, y_clean), z_clean, (X, Y), 
+                        fill_value=plot_config["Fill_Value"][0], method='linear')
+        except Exception:
+            warnings.warn("Linear interpolation failed (coplanar points), using nearest neighbor instead")
+            z = griddata((x_clean, y_clean), z_clean, (X, Y), 
+                        fill_value=plot_config["Fill_Value"][0], method='nearest')
+        
         x = xi
         y = yi
+    else:
+        x = points_df['x'].values
+        y = points_df['y'].values
+        z = points_df['z'].values
 
     return x, y, z
 
